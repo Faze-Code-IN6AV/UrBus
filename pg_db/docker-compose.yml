@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:13
+    container_name: urbus_postgres
+    environment:
+      POSTGRES_USER: UrBus
+      POSTGRES_PASSWORD: urkinalbus001
+      POSTGRES_DB: urbus_users
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
