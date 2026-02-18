@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\diego\\Desktop\\Tareas\\Taller\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj": {}
+    "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj": {}
   },
   "projects": {
-    "C:\\Users\\diego\\Desktop\\Tareas\\Taller\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj": {
+    "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\diego\\Desktop\\Tareas\\Taller\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj",
+        "projectUniqueName": "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj",
         "projectName": "AuthenticationService.Domain",
-        "projectPath": "C:\\Users\\diego\\Desktop\\Tareas\\Taller\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj",
-        "packagesPath": "C:\\Users\\diego\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\diego\\Desktop\\Tareas\\Taller\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\obj\\",
+        "projectPath": "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj",
+        "packagesPath": "C:\\Users\\itsra\\.nuget\\packages\\",
+        "outputPath": "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\diego\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\itsra\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
