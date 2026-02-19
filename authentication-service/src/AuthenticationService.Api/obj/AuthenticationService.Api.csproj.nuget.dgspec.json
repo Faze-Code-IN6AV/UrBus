@@ -288,6 +288,9 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
+              "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Application\\AuthenticationService.Application.csproj": {
+                "projectPath": "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Application\\AuthenticationService.Application.csproj"
+              },
               "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj": {
                 "projectPath": "D:\\Users\\Kato\\Desktop\\Javier\\KINAL_JAV\\FazeCode\\UrBus\\authentication-service\\src\\AuthenticationService.Domain\\AuthenticationService.Domain.csproj"
               }
