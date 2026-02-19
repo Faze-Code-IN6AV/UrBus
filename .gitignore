@@ -1,0 +1,25 @@
+# Carpetas generadas por .NET
+bin/
+obj/
+
+# Logs
+logs/
+
+# Archivos compilados
+*.dll
+*.exe
+*.pdb
+*.deps.json
+*.runtimeconfig.json
+
+# Archivos temporales
+*.user
+*.suo
+*.cache
+
+# IDE
+.vscode/
+.idea/
+
+# Claves
+keys/
