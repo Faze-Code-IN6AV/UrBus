@@ -15,7 +15,7 @@ public class Driver
     public string UserId {get; set;} = string.Empty;
 
     [ForeignKey(nameof(UserId))]
-    public User User {get; set;} = null;
+    public User User {get; set;} = null!;
 
     [Required(ErrorMessage = "El número de licencia es obligatorio.")]
     [MaxLength(30)]
