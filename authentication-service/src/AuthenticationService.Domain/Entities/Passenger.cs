@@ -15,7 +15,7 @@ public class Passenger
     public string UserId {get; set;} = string.Empty;
 
     [ForeignKey(nameof(UserId))]
-    public User User {get; set;} = null;
+    public User User {get; set;} = null!;
 
     [Required(ErrorMessage = "La ruta es obligatoria.")]
     [MaxLength(50)]

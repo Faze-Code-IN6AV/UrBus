@@ -44,4 +44,7 @@ public class User
     public UserEmail UserEmail {get; set;} = null!;
 
     public UserPasswordReset UserPasswordReset {get; set;} = null!;
+
+    public Driver? Driver {get; set;} = null!;
+    public Passenger? Passenger {get; set;} = null!;
 }
