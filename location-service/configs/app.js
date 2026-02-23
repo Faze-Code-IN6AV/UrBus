@@ -37,6 +37,7 @@ const routes = (app) => {
 =======
 };
 
+//Rutas
 const routes = (app) => {
 >>>>>>> 75c0892 (chore:Se agrego la base del servicio)
 
