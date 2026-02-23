@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import engine from 'ejs-mate';
 import { corsOptions } from './cors.configuration.js';
 import { helmetOptions } from './helmet.configuration.js';
 import { requestLimit } from './rateLimit.configuration.js';
@@ -18,9 +19,17 @@ const middlewares = (app) => {
     app.use(morgan('dev'));
     app.use(helmet(helmetOptions));
     app.use(requestLimit);
+    app.engine('ejs', engine);
+    app.set('view engine', 'ejs');
+    app.set('views', './src/views'); //Ruta para las vistas
+    app.use(`${BASE_PATH}`, express.static('./src/public')); //Ruta para los archivos estáticos (CSS, JS, imágenes)
 };
 
+//Rutas
 const routes = (app) => {
+    app.get(`${BASE_PATH}/`, (req, res) => {
+        res.render('index');
+    });
 
     app.get(`${BASE_PATH}/health`, (req, res) => {
         res.status(200).json({
@@ -30,6 +39,7 @@ const routes = (app) => {
     });
 }
 
+//Inicialización del servidor
 export const initServer = async () => {
     const app = express();
     const PORT = process.env.PORT;
