@@ -1,13 +1,12 @@
 'use strict'
 
+import http from 'http';
+import { Server } from 'socket.io';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
-<<<<<<< HEAD
 import engine from 'ejs-mate';
-=======
->>>>>>> 75c0892 (chore:Se agrego la base del servicio)
 import { corsOptions } from './cors.configuration.js';
 import { helmetOptions } from './helmet.configuration.js';
 import { requestLimit } from './rateLimit.configuration.js';
@@ -22,7 +21,6 @@ const middlewares = (app) => {
     app.use(morgan('dev'));
     app.use(helmet(helmetOptions));
     app.use(requestLimit);
-<<<<<<< HEAD
     app.engine('ejs', engine);
     app.set('view engine', 'ejs');
     app.set('views', './src/views'); //Ruta para las vistas
@@ -31,28 +29,19 @@ const middlewares = (app) => {
 
 //Rutas
 const routes = (app) => {
-    app.get(`${BASE_PATH}/`, (req, res) => {
-        res.render('index');
-    });
-=======
-};
-
-//Rutas
-const routes = (app) => {
->>>>>>> 75c0892 (chore:Se agrego la base del servicio)
-
     app.get(`${BASE_PATH}/health`, (req, res) => {
         res.status(200).json({
             status: 'healthy',
             service: 'UrBus Admin Server'
         });
     });
+
+    app.get(`${BASE_PATH}/`, (req, res) => {
+        res.render('index');
+    });
 }
 
-<<<<<<< HEAD
 //Inicialización del servidor
-=======
->>>>>>> 75c0892 (chore:Se agrego la base del servicio)
 export const initServer = async () => {
     const app = express();
     const PORT = process.env.PORT;
@@ -63,10 +52,33 @@ export const initServer = async () => {
         routes(app);
 
         app.use(errorHandler);
-        app.listen(PORT, () => {
+
+        // Creamos el servidor HTTP
+        const server = http.createServer(app);
+
+        // Inicializamos socket.io
+        const io = new Server(server, {
+            cors: {
+                origin: "*"
+            }
+        });
+
+        // Evento de conexión
+        io.on("connection", (socket) => {
+            console.log("Usuario conectado");
+
+            socket.on("busLocation", (data) => {
+                // Enviar ubicación del bus a todos menos al que la envió
+                io.emit("updateBus", data);
+            });
+        });
+
+        // Ahora escuchamos con server.listen
+        server.listen(PORT, () => {
             console.log(`UrBus's Admin Server running on port: ${PORT}`);
             console.log(`Health Check: http://localhost:${PORT}${BASE_PATH}/health`)
         });
+
     }catch(err){
         console.error(`Error al iniciar el servidor: ${err.message}`);
         process.exit(1);

@@ -1,22 +1,27 @@
 export const helmetOptions = {
-    contentSecurityPolicy:{
+    contentSecurityPolicy: {
         useDefaults: true,
-        directives:{
+        directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", 'data:', 'blob:'],
-            connectSrc: ["'self'"],
-            fontSrc:["'self'"],
+            connectSrc: [
+                "'self'",
+                "ws:",
+                "wss:",
+                "https://unpkg.com"
+            ],
+            fontSrc: ["'self'"],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
-<<<<<<< HEAD
             frameAncestors: ["'none'"],
             defaultSrc: ["'self'"],
             scriptSrc: [
                 "'self'",
                 "'unsafe-inline'",
-                "https://unpkg.com"
+                "https://unpkg.com",
+                "https://cdn.socket.io"
             ],
             styleSrc: [
                 "'self'",
@@ -27,16 +32,14 @@ export const helmetOptions = {
                 "'self'",
                 "data:",
                 "https://*.tile.openstreetmap.org",
-                "https://maps.wikimedia.org"
+                "https://maps.wikimedia.org",
+                "https://unpkg.com"
             ]
-=======
-            frameAncestors: ["'none'"]
->>>>>>> 75c0892 (chore:Se agrego la base del servicio)
         }
     },
     hsts: false,
-    frameguard:{action: 'deny'},
+    frameguard: { action: 'deny' },
     hidePoweredBy: true,
-    crossOriginResourcePolicy: {policy: 'cross-origin'},
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     crossOriginEmbedderPolicy: false,
 };
