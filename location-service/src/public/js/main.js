@@ -1,9 +1,9 @@
-var map = L.map('map-template').setView([14.61350, -90.54975], 15);
+const map = L.map('map-template').setView([14.6258, -90.5360], 15);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-L.marker([50.5, 30.5])
+L.marker([14.6258, -90.5360])
   .addTo(map)
-  .bindPopup('Hello There!');
+  .bindPopup('Bienvenido a Kinal!');
