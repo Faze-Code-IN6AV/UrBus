@@ -10,7 +10,6 @@ export const helmetOptions = {
             fontSrc:["'self'"],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
-<<<<<<< HEAD
             frameAncestors: ["'none'"],
             defaultSrc: ["'self'"],
             scriptSrc: [
@@ -27,11 +26,9 @@ export const helmetOptions = {
                 "'self'",
                 "data:",
                 "https://*.tile.openstreetmap.org",
-                "https://maps.wikimedia.org"
+                "https://maps.wikimedia.org",
+                "https://unpkg.com"
             ]
-=======
-            frameAncestors: ["'none'"]
->>>>>>> 75c0892 (chore:Se agrego la base del servicio)
         }
     },
     hsts: false,

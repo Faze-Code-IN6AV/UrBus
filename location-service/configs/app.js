@@ -4,10 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
-<<<<<<< HEAD
 import engine from 'ejs-mate';
-=======
->>>>>>> 75c0892 (chore:Se agrego la base del servicio)
 import { corsOptions } from './cors.configuration.js';
 import { helmetOptions } from './helmet.configuration.js';
 import { requestLimit } from './rateLimit.configuration.js';
@@ -22,7 +19,6 @@ const middlewares = (app) => {
     app.use(morgan('dev'));
     app.use(helmet(helmetOptions));
     app.use(requestLimit);
-<<<<<<< HEAD
     app.engine('ejs', engine);
     app.set('view engine', 'ejs');
     app.set('views', './src/views'); //Ruta para las vistas
@@ -31,28 +27,19 @@ const middlewares = (app) => {
 
 //Rutas
 const routes = (app) => {
-    app.get(`${BASE_PATH}/`, (req, res) => {
-        res.render('index');
-    });
-=======
-};
-
-//Rutas
-const routes = (app) => {
->>>>>>> 75c0892 (chore:Se agrego la base del servicio)
-
     app.get(`${BASE_PATH}/health`, (req, res) => {
         res.status(200).json({
             status: 'healthy',
             service: 'UrBus Admin Server'
         });
     });
+
+    app.get(`${BASE_PATH}/`, (req, res) => {
+        res.render('index');
+    });
 }
 
-<<<<<<< HEAD
 //Inicialización del servidor
-=======
->>>>>>> 75c0892 (chore:Se agrego la base del servicio)
 export const initServer = async () => {
     const app = express();
     const PORT = process.env.PORT;
