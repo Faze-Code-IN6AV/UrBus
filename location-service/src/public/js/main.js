@@ -1,25 +1,46 @@
+const socket = io();
 const map = L.map('map-template').setView([14.6258, -90.5360], 15);
+let busMarker;
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-map.locate({ enableHighAccuracy: true });
-map.on('locationfound', e => {
-  const coords = [e.latlng.lat, e.latlng.lng];
-
-  L.marker(coords, { icon: busIcon })
-    .addTo(map)
-    .bindPopup('Ubicación actual del bus');
-});
-
+// Marcador para la ubicación de Kinal
 L.marker([14.6258, -90.5360])
   .addTo(map)
   .bindPopup('Bienvenido a Kinal!');
 
-  const busIcon = L.divIcon({
+//icono del bus
+const busIcon = L.divIcon({
   html: "🚌",
   className: "bus-icon",
   iconSize: [30, 30],
   iconAnchor: [15, 15]
+});
+
+// ESTE ES EL QUE MUESTRA EL BUS
+socket.on("updateBus", (coords) => {
+  console.log("Recibiendo ubicación:", coords); // 👈 agrega esto
+
+  if (!busMarker) {
+    busMarker = L.marker([coords.lat, coords.lng], { icon: busIcon })
+      .addTo(map)
+      .bindPopup("Bus en ruta");
+  } else {
+    busMarker.setLatLng([coords.lat, coords.lng]);
+  }
+});
+
+// ESTE ENVÍA TU UBICACIÓN
+navigator.geolocation.watchPosition((position) => {
+
+  const coords = {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude
+  };
+
+  console.log("Enviando ubicación:", coords);
+  socket.emit("busLocation", coords);
+
 });
