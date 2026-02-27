@@ -7,7 +7,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 // Marcador para la ubicación de Kinal
-L.marker([14.6258, -90.5360])
+L.marker([14.6245, -90.5366])
   .addTo(map)
   .bindPopup('Bienvenido a Kinal!');
 
@@ -21,7 +21,7 @@ const busIcon = L.divIcon({
 
 // ESTE ES EL QUE MUESTRA EL BUS
 socket.on("updateBus", (coords) => {
-  console.log("Recibiendo ubicación:", coords); // 👈 agrega esto
+  console.log("Recibiendo ubicación:", coords); 
 
   if (!busMarker) {
     busMarker = L.marker([coords.lat, coords.lng], { icon: busIcon })
