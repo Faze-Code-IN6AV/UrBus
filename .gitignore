@@ -106,3 +106,7 @@ StyleCopReport.xml
 *.cachefile
 *.VC.db
 *.VC.VC.opendb
+
+# WhatsApp Web session
+.wwebjs_auth/
+.wwebjs_cache/
