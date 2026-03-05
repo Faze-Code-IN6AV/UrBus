@@ -8,6 +8,15 @@ export const createPassengerService = async(data) => {
     return passenger;
 };
 
+export const getPassengersService = async(busId) => {
+
+    return await Passenger.find({
+        busId,
+        active: true
+    });
+
+};
+
 
 export const updatePassengerStatusService = async(userId, status) => {
 
