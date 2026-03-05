@@ -20,7 +20,7 @@ const isAdmin = (req) => {
     req.user?.role ||
     req.user?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
 
-  return role === 'ADMIN_ROLE';
+  return role === 'ADMIN_ROLE' || role === 'DRIVER_ROLE';
 };
 
 export const sendArrival = async (req, res) => {
@@ -37,7 +37,7 @@ export const sendArrival = async (req, res) => {
     if (isGroup(number) && !isAdmin(req)) {
       return res.status(403).json({
         success: false,
-        message: 'Solo los administradores pueden enviar mensajes a grupos'
+        message: 'Solo los administradores y conductores pueden enviar mensajes a grupos'
       });
     }
 
@@ -67,7 +67,7 @@ export const sendDelay = async (req, res) => {
     if (isGroup(number) && !isAdmin(req)) {
       return res.status(403).json({
         success: false,
-        message: 'Solo los administradores pueden enviar mensajes a grupos'
+        message: 'Solo los administradores y conductores pueden enviar mensajes a grupos'
       });
     }
 
@@ -97,7 +97,7 @@ export const sendRouteChange = async (req, res) => {
     if (isGroup(number) && !isAdmin(req)) {
       return res.status(403).json({
         success: false,
-        message: 'Solo los administradores pueden enviar mensajes a grupos'
+        message: 'Solo los administradores y conductores pueden enviar mensajes a grupos'
       });
     }
 
@@ -127,7 +127,7 @@ export const sendCustom = async (req, res) => {
     if (isGroup(number) && !isAdmin(req)) {
       return res.status(403).json({
         success: false,
-        message: 'Solo los administradores pueden enviar mensajes a grupos'
+        message: 'Solo los administradores y conductores pueden enviar mensajes a grupos'
       });
     }
 
@@ -149,7 +149,7 @@ export const getWhatsAppGroups = async (req, res) => {
     if (!isAdmin(req)) {
       return res.status(403).json({
         success: false,
-        message: 'Acceso solo para administradores'
+        message: 'Acceso solo para administradores y conductores'
       });
     }
 
