@@ -1,9 +1,5 @@
 import Passenger from './passenger.model.js';
 
-/**
- * Crear pasajero
- * SOLO ADMIN
- */
 export const createPassenger = async (req, res, next) => {
   try {
 
@@ -29,6 +25,32 @@ export const createPassenger = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getPassengers = async (req, res, next) => {
+  try {
+
+    if (
+      req.user.role !== 'ADMIN_ROLE' &&
+      req.user.role !== 'DRIVER_ROLE' 
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tiene permisos para ver pasajeros'
+      });
+    }
+
+    const passengers = await Passenger.find({ isActive: true });
+
+    res.status(200).json({
+      success: true,
+      data: passengers
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 
 export const updatePassengerStatus = async (req, res, next) => {

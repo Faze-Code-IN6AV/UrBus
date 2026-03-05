@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   createPassenger,
+  getPassengers,
   updatePassengerStatus,
   deletePassenger
 } from './passenger.controller.js';
@@ -16,6 +17,11 @@ router.post(
   createPassenger
 );
 
+router.get(
+  '/',
+  validateJWT,
+  getPassengers
+);
 
 router.patch(
   '/:id/status',
