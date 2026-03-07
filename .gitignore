@@ -9,6 +9,13 @@ package-lock.json
 docker-compose.override.yml
 .dockerignore
 
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+*.env
+
 # Secrets
 **/secrets/
 **/keys/
