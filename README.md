@@ -1,9 +1,3 @@
-Perfecto. Con la referencia que me diste y la información que ya sé de **UrBus** (Node, .NET, Docker, Postgres, equipos de estudiantes por bus), te preparé un **README profesional estilo GitHub**, parecido al que enviaste pero **más natural y menos “IA”**.
-
-Puedes usarlo directamente o modificar los nombres de servicios cuando los tengas definidos.
-
----
-
 # UrBus
 
 Plataforma de desarrollo colaborativo orientada a la integración de estudiantes en equipos de trabajo organizados por “buses”.
