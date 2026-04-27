@@ -1,0 +1,394 @@
+openapi: 3.0.3
+info:
+  title: UrBus Passenger Service API
+  description: |
+    Microservicio de gestión de pasajeros para la plataforma UrBus.
+
+    ## Autenticación
+    Todos los endpoints requieren JWT Bearer token (compartido con el Auth Service).
+
+    ## Roles
+    - "ADMIN_ROLE": Acceso total — crear, listar, eliminar pasajeros
+    - "DRIVER_ROLE": Solo puede listar pasajeros activos
+    - "PASSENGER_ROLE": Solo puede actualizar su propio estado
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:{port}/urbus/v1
+    description: Local development
+    variables:
+      port:
+        default: '3011'
+
+tags:
+  - name: Passengers
+    description: Gestión de pasajeros
+  - name: Health
+    description: Estado del servicio
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Servicio saludable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: Passenger Service
+
+  /passengers:
+    post:
+      tags:
+        - Passengers
+      summary: Crear pasajero
+      operationId: createPassenger
+      description: Crea un nuevo pasajero. Solo "ADMIN_ROLE".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Nombre del pasajero
+                  example: Juan Pérez
+            example:
+              name: Juan Pérez
+      responses:
+        '201':
+          description: Pasajero creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: Pasajero creado
+                data:
+                  _id: 661f2b3c4e5d6f7a8b9c0d1e
+                  name: Juan Pérez
+                  userId: a1b2c3d4e5f6g7h8
+                  status: AUSENT
+                  isActive: true
+                  createdAt: "2026-04-27T00:00:00.000Z"
+                  updatedAt: "2026-04-27T00:00:00.000Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - Passengers
+      summary: Listar pasajeros activos
+      operationId: getPassengers
+      description: Retorna todos los pasajeros con "isActive = true". Requiere "ADMIN_ROLE" o "DRIVER_ROLE".
+      responses:
+        '200':
+          description: Lista de pasajeros activos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Passenger'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /passengers/{id}/status:
+    patch:
+      tags:
+        - Passengers
+      summary: Actualizar estado del pasajero
+      operationId: updatePassengerStatus
+      description: |
+        Actualiza el estado de presencia del pasajero.
+        - "ADMIN_ROLE" y "DRIVER_ROLE": pueden actualizar cualquier pasajero
+        - "PASSENGER_ROLE": solo puede actualizar su propio estado
+      parameters:
+        - $ref: '#/components/parameters/PassengerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [PRESENT, AUSENT]
+                  description: Nuevo estado del pasajero
+                  example: PRESENT
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: Estado actualizado
+                data:
+                  _id: 661f2b3c4e5d6f7a8b9c0d1e
+                  name: Juan Pérez
+                  userId: a1b2c3d4e5f6g7h8
+                  status: PRESENT
+                  isActive: true
+                  createdAt: "2026-04-27T00:00:00.000Z"
+                  updatedAt: "2026-04-27T00:00:00.000Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /passengers/{id}:
+    delete:
+      tags:
+        - Passengers
+      summary: Eliminar pasajero (soft delete)
+      operationId: deletePassenger
+      description: Marca el pasajero como inactivo ("isActive = false"). Solo "ADMIN_ROLE".
+      parameters:
+        - $ref: '#/components/parameters/PassengerId'
+      responses:
+        '200':
+          description: Pasajero eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Pasajero eliminado
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT emitido por el Auth Service
+
+  parameters:
+    PassengerId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: ID del pasajero (MongoDB ObjectId)
+      example: 661f2b3c4e5d6f7a8b9c0d1e
+
+  schemas:
+    Passenger:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: ID del pasajero (MongoDB ObjectId)
+          example: 661f2b3c4e5d6f7a8b9c0d1e
+        name:
+          type: string
+          example: Juan Pérez
+        userId:
+          type: string
+          description: ID del usuario del Auth Service
+          example: a1b2c3d4e5f6g7h8
+        status:
+          type: string
+          enum: [PRESENT, AUSENT]
+          default: AUSENT
+          example: AUSENT
+        isActive:
+          type: boolean
+          default: true
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-04-27T00:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-04-27T00:00:00.000Z"
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Passenger'
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        error:
+          type: string
+          nullable: true
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error de validación
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              account:
+                type: string
+                example: name
+              message:
+                type: string
+                example: Path "name" is required
+
+  responses:
+    Unauthorized:
+      description: Token ausente o inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing:
+              value:
+                message: Token requerido
+            invalid:
+              value:
+                success: false
+                message: Token inválido
+                error: INVALID_TOKEN
+            expired:
+              value:
+                success: false
+                message: Token expirado
+                error: TOKEN_EXPIRED
+
+    Forbidden:
+      description: Sin permisos para esta operación
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: No tiene permisos para crear pasajeros
+
+    NotFound:
+      description: Pasajero no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Pasajero no encontrado
+
+    ValidationError:
+      description: Error de validación o ID inválido
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ValidationErrorResponse'
+              - $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            validationError:
+              value:
+                success: false
+                message: Error de validación
+                errors:
+                  - account: name
+                    message: Path "name" is required
+            invalidId:
+              value:
+                success: false
+                message: Formato de ID inválido
+                error: INVALID_ID
+            duplicate:
+              value:
+                success: false
+                message: name ya existe
+                error: DUPLICATE_ACCOUNT
+
+    InternalError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Error interno del servidor
+            error: INTERNAL_SERVER_ERROR
