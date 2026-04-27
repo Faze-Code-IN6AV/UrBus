@@ -1,0 +1,375 @@
+openapi: 3.0.3
+info:
+  title: UrBus Post Service API
+  description: |
+    Microservicio de gestión de posts para la plataforma UrBus.
+
+    ## Autenticación
+    Todos los endpoints requieren JWT Bearer token (compartido con el Auth Service).
+
+    ## Roles
+    - "ADMIN_ROLE": Acceso total — ve posts eliminados, puede reactivar
+    - "DRIVER_ROLE": Puede crear, editar y eliminar **sus propios** posts
+    - "USER_ROLE" / "PASSENGER_ROLE": Solo lectura (posts activos)
+
+    ## Imágenes
+    - Subida directa a Cloudinary ("urbus/posts")
+    - Formatos: "jpeg", "jpg", "png", "webp"
+    - Tamaño máximo: **10 MB**
+    - Se redimensionan a máximo 1000×1000px
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:{port}/urbus/v1
+    description: Local development
+    variables:
+      port:
+        default: '5001'
+
+tags:
+  - name: Posts
+    description: CRUD de posts
+
+security:
+  - bearerAuth: []
+
+paths:
+  /posts:
+    post:
+      tags:
+        - Posts
+      summary: Crear post
+      operationId: createPost
+      description: |
+        Crea un nuevo post. Solo "ADMIN_ROLE" y "DRIVER_ROLE" pueden crear posts.
+        Acepta "multipart/form-data" para subir imagen opcional.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                  description: Título del post
+                  example: "Nueva ruta disponible"
+                content:
+                  type: string
+                  description: Contenido del post
+                  example: "La ruta 42 ahora llega hasta zona 18."
+                image:
+                  type: string
+                  format: binary
+                  description: Imagen del post (opcional). jpeg/jpg/png/webp, máx 10MB.
+      responses:
+        '201':
+          description: Post creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Post creado
+                  post:
+                    $ref: '#/components/schemas/Post'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - Posts
+      summary: Listar posts
+      operationId: getPosts
+      description: |
+        Retorna todos los posts activos ("isDeleted: false").
+        "ADMIN_ROLE" recibe **todos** los posts incluyendo eliminados.
+      responses:
+        '200':
+          description: Lista de posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /posts/my-posts:
+    get:
+      tags:
+        - Posts
+      summary: Mis posts
+      operationId: getMyPosts
+      description: Retorna todos los posts creados por el usuario autenticado (incluye eliminados propios).
+      responses:
+        '200':
+          description: Posts del usuario autenticado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /posts/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Obtener post por ID
+      operationId: getPostById
+      description: |
+        Retorna un post por su ID.
+        "ADMIN_ROLE" puede ver posts eliminados. Otros roles solo ven posts activos.
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Post encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags:
+        - Posts
+      summary: Actualizar post
+      operationId: updatePost
+      description: |
+        Actualiza título, contenido e imagen de un post.
+        - "ADMIN_ROLE": puede editar cualquier post
+        - "DRIVER_ROLE": solo puede editar sus propios posts
+        Acepta "multipart/form-data". Todos los campos son opcionales (se conserva el valor anterior si no se envía).
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Título actualizado"
+                content:
+                  type: string
+                  example: "Contenido actualizado."
+                image:
+                  type: string
+                  format: binary
+                  description: Nueva imagen (opcional). jpeg/jpg/png/webp, máx 10MB.
+      responses:
+        '200':
+          description: Post actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Post actualizado
+                  post:
+                    $ref: '#/components/schemas/Post'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Posts
+      summary: Eliminar post (soft delete)
+      operationId: deletePost
+      description: |
+        Marca el post como eliminado ("isDeleted: true"). No borra el registro de la base de datos.
+        - "ADMIN_ROLE": puede eliminar cualquier post
+        - "DRIVER_ROLE": solo puede eliminar sus propios posts
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Post eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Post eliminado (soft delete)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /posts/{id}/reactivate:
+    patch:
+      tags:
+        - Posts
+      summary: Reactivar post eliminado
+      operationId: reactivatePost
+      description: "Restaura un post eliminado (isDeleted = false). Solo ADMIN_ROLE."
+      parameters:
+        - $ref: '#/components/parameters/PostId'
+      responses:
+        '200':
+          description: Post reactivado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Post reactivado
+                  post:
+                    $ref: '#/components/schemas/Post'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT emitido por el Auth Service
+
+  parameters:
+    PostId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: ID del post (MongoDB ObjectId)
+      example: "661f2b3c4e5d6f7a8b9c0d1e"
+
+  schemas:
+    Post:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: ID del post (MongoDB ObjectId)
+          example: "661f2b3c4e5d6f7a8b9c0d1e"
+        title:
+          type: string
+          example: "Nueva ruta disponible"
+        content:
+          type: string
+          example: "La ruta 42 ahora llega hasta zona 18."
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://res.cloudinary.com/demo/image/upload/v1/urbus/posts/nueva-ruta-a1b2c3d4.jpg"
+        imagePublicId:
+          type: string
+          nullable: true
+          description: Public ID en Cloudinary
+          example: "urbus/posts/nueva-ruta-a1b2c3d4"
+        createdBy:
+          type: string
+          description: ID del usuario que creó el post
+          example: "a1b2c3d4e5f6g7h8"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-04-27T00:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-04-27T00:00:00.000Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Mensaje de error"
+        error:
+          type: string
+          nullable: true
+          example: "Detalle del error interno"
+
+  responses:
+    Unauthorized:
+      description: Token ausente o inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing:
+              value:
+                message: Token requerido
+            invalid:
+              value:
+                message: Token inválido
+
+    Forbidden:
+      description: Sin permisos para esta operación
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Solo puedes editar tus propios posts
+
+    NotFound:
+      description: Post no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Post no encontrado
+
+    InternalError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Error interno
+            error: "Detalle del error"
