@@ -5,6 +5,8 @@ using AuthenticationService.Domain.Interfaces;
 using AuthenticationService.Persistence.Data;
 using AuthenticationService.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 namespace AuthService.Api.Extensions;
 
@@ -29,10 +31,57 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    
+
     public static IServiceCollection AddApiDocumentation(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "UrBus Authentication Service API",
+                Version = "v1",
+                Description = "Microservicio para autenticación, autorización y gestión de usuarios",
+                Contact = new OpenApiContact
+                {
+                    Name = "UrBus Team"
+                }
+            });
+
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Description = "Ingrese el token JWT: Bearer {token}",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http, 
+                Scheme = "bearer",
+                BearerFormat = "JWT"
+            });
+
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Id="Bearer",
+                            Type=ReferenceType.SecurityScheme
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+            if (File.Exists(xmlPath))
+                options.IncludeXmlComments(xmlPath);
+
+        });
 
         return services;
     }

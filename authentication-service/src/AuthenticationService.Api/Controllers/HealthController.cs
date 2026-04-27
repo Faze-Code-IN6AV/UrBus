@@ -7,6 +7,7 @@ namespace AuthService.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class HealthController : ControllerBase
 {
+    [HttpGet("status")]
     public IActionResult GetHeatlh()
     {
         var response = new
