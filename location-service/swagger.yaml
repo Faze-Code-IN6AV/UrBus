@@ -1,0 +1,209 @@
+openapi: 3.0.3
+info:
+  title: UrBus Location Service API
+  description: |
+    Microservicio de rastreo de ubicación en tiempo real para la plataforma UrBus.
+
+    Combina una API HTTP REST y una capa de **WebSockets via Socket.IO** para transmitir
+    la ubicación del bus en tiempo real a todos los clientes conectados.
+
+    El mapa se renderiza con **Leaflet.js + OpenStreetMap** directamente desde este servicio.
+
+    ---
+
+    ## Arquitectura
+
+    ```
+    Conductor (navegador)
+        │
+        ├── navigator.geolocation.watchPosition()
+        │       └── socket.emit("busLocation", { lat, lng })
+        │                           │
+        │               Socket.IO Server
+        │                   io.emit("updateBus", coords)
+        │                           │
+        └── Pasajeros (navegadores) ← reciben coordenadas en tiempo real
+    ```
+
+    ---
+
+    ## WebSocket — Eventos Socket.IO
+
+    Conectarse al servidor Socket.IO en la raíz del servidor (sin path especial):
+
+    ```javascript
+    const socket = io("http://localhost:PORT");
+    ```
+
+    ### Evento emitido por el cliente (conductor)
+
+    **`busLocation`**
+    Envía la ubicación GPS actual del bus al servidor.
+
+    ```javascript
+    socket.emit("busLocation", {
+      lat: 14.6258,
+      lng: -90.5366
+    });
+    ```
+
+    | Campo | Tipo   | Descripción                |
+    |-------|--------|----------------------------|
+    | lat   | number | Latitud GPS del bus         |
+    | lng   | number | Longitud GPS del bus        |
+
+    ---
+
+    ### Eventos emitidos por el servidor (broadcast a todos)
+
+    **`updateBus`**
+    Se emite a todos los clientes conectados cada vez que el conductor envía
+    una nueva ubicación.
+
+    ```javascript
+    socket.on("updateBus", (coords) => {
+      // coords = { lat: number, lng: number }
+      busMarker.setLatLng([coords.lat, coords.lng]);
+    });
+    ```
+
+    ---
+
+    **`busArrived`**
+    Se emite una única vez cuando el bus llega a las coordenadas de Kinal
+    dentro de una tolerancia de ~20 metros (0.0002 grados).
+
+    Coordenadas de destino: `lat 14.6258, lng -90.5360`
+
+    ```javascript
+    socket.on("busArrived", () => {
+      // mostrar notificación de llegada
+    });
+    ```
+
+    Este evento solo se emite una vez por sesión de servidor (flag `busArrived`
+    se reinicia al reiniciar el servicio).
+
+    ---
+
+    ## Mapa Leaflet
+
+    La vista principal (`GET /urbus/v1/`) renderiza un mapa interactivo con:
+    - Tile layer de OpenStreetMap
+    - Marcador fijo en Kinal (lat 14.6245, lng -90.5366)
+    - Marcador dinámico del bus (emoji 🚌) actualizado via WebSocket
+    - Detección de llegada a Kinal con tolerancia de 50 metros (Haversine)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:{port}/urbus/v1
+    description: Local development
+    variables:
+      port:
+        default: '3033'
+
+tags:
+  - name: Health
+    description: Estado del servicio
+  - name: Map
+    description: Interfaz del mapa Leaflet
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Servicio saludable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: UrBus Location Service
+
+  /:
+    get:
+      tags:
+        - Map
+      summary: Vista del mapa de rastreo
+      operationId: getMapView
+      description: |
+        Renderiza la página HTML con el mapa Leaflet + OpenStreetMap.
+        La página se conecta automáticamente al servidor Socket.IO y empieza
+        a emitir la ubicación GPS del dispositivo (requiere permiso de geolocalización).
+      responses:
+        '200':
+          description: HTML con el mapa Leaflet renderizado
+          content:
+            text/html:
+              schema:
+                type: string
+                description: Página HTML con mapa interactivo
+
+  /css/main.css:
+    get:
+      tags:
+        - Map
+      summary: Estilos del mapa
+      operationId: getStyles
+      responses:
+        '200':
+          description: Hoja de estilos CSS
+          content:
+            text/css:
+              schema:
+                type: string
+
+  /js/main.js:
+    get:
+      tags:
+        - Map
+      summary: Script del mapa
+      operationId: getScript
+      description: Script que inicializa el mapa Leaflet, conecta el Socket.IO y maneja la geolocalización.
+      responses:
+        '200':
+          description: JavaScript del mapa
+          content:
+            application/javascript:
+              schema:
+                type: string
+
+components:
+  schemas:
+    BusCoords:
+      type: object
+      description: Coordenadas GPS del bus
+      required:
+        - lat
+        - lng
+      properties:
+        lat:
+          type: number
+          format: double
+          description: Latitud GPS
+          example: 14.6258
+        lng:
+          type: number
+          format: double
+          description: Longitud GPS
+          example: -90.5366
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: healthy
+        service:
+          type: string
+          example: UrBus Location Service
