@@ -29,13 +29,6 @@ const routes = (app) => {
             service: 'UrBus Notification Service'
         });
     });
-
-    app.use((req, res) => {
-        res.status(404).json({
-            success: false,
-            message: 'Ruta no encontrada en el servidor.'
-        });
-    });
 };
 
 export const initServer = async () => {
@@ -46,9 +39,13 @@ export const initServer = async () => {
     try {
         middlewares(app);
         routes(app);
-        app.use(`${BASE_PATH}/swagger`, swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
-        // 404 siempre al último
+        app.use(
+            `${BASE_PATH}/swagger`,
+            swaggerUi.serve,
+            swaggerUi.setup(swaggerDoc)
+        );
+
         app.use((req, res) => {
             res.status(404).json({
                 success: false,
@@ -57,8 +54,9 @@ export const initServer = async () => {
         });
 
         app.listen(PORT, () => {
-            console.log(`Servicio de notificación ejecutándose en puerto: ${PORT}`);
+            console.log(`Servicio ejecutándose en puerto: ${PORT}`);
             console.log(`Health Check: http://localhost:${PORT}${BASE_PATH}/health`);
+            console.log(`Swagger: http://localhost:${PORT}${BASE_PATH}/swagger`);
         });
 
     } catch (err) {
