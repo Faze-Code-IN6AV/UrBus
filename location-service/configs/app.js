@@ -7,12 +7,16 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import engine from 'ejs-mate';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'fs';
+import { parse } from 'yaml';
 import { corsOptions } from './cors.configuration.js';
 import { helmetOptions } from './helmet.configuration.js';
 import { requestLimit } from './rateLimit.configuration.js';
 import { errorHandler } from '../middlewares/handle-errors.js';
 
-const BASE_PATH = '/UrBus/v1';
+const BASE_PATH = '/urbus/v1';
+const swaggerDoc = parse(readFileSync('./swagger.yaml', 'utf8'));
 
 // Coordenadas de Kinal y tolerancia
 const kinalCoords = { lat: 14.6258, lng: -90.5360 };
@@ -51,6 +55,7 @@ export const initServer = async () => {
     app.set('trust proxy', 1);
 
     try {
+        app.use(`${BASE_PATH}/swagger`, swaggerUi.serve, swaggerUi.setup(swaggerDoc));
         middlewares(app);
         routes(app);
         app.use(errorHandler);

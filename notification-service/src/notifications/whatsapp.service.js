@@ -9,7 +9,10 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    //Para Windows
+    //executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' 
+    //Para Mac
+    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
   }
 });
 

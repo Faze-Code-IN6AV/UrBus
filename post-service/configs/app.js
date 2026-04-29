@@ -4,6 +4,9 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'fs';
+import { parse } from 'yaml';
 
 import { dbConnection } from './db.js';
 import { helmetOptions } from './helmet.configuration.js';
@@ -13,12 +16,14 @@ import { requestLimit } from './rateLimit.configuration.js';
 import postRoutes from '../src/posts/post.routes.js';
 
 const BASE_PATH = '/urbus/v1';
+const swaggerDoc = parse(readFileSync('./swagger.yaml', 'utf8'));
 
 export const initServer = async () => {
     const app = express();
     const PORT = process.env.PORT || 5001;
 
     app.set('trust proxy', 1);
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
     try {
         await dbConnection();

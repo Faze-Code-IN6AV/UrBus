@@ -46,7 +46,17 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.DocumentTitle = "UrBus Auth API";
+        options.SwaggerEndpoint("/swagger/v1/swagger.json",
+            "Authentication Service V1");
+
+        options.DisplayRequestDuration();
+        options.EnableDeepLinking();
+        options.EnablePersistAuthorization();
+        options.DefaultModelsExpandDepth(2);
+    });
 }
 
 // Add Serilog request logging

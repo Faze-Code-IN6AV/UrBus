@@ -4,6 +4,9 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
+import { readFileSync } from 'fs';
+import { parse } from 'yaml';
 
 import { dbConnection } from './db.js';
 import { corsOptions } from './cors.configuration.js';
@@ -13,7 +16,8 @@ import { errorHandler } from '../middlewares/handle-errors.js';
 
 import passengerRoutes from '../src/passenger/passenger.routes.js';
 
-const BASE_PATH = '/paySmart/v1';
+const BASE_PATH = '/urbus/v1';
+const swaggerDoc = parse(readFileSync('./swagger.yaml', 'utf8'));
 
 const middlewares = (app) => {
     app.use(express.urlencoded({ extended: false, limit: '10mb' }));
@@ -42,6 +46,7 @@ export const initServer = async () => {
     const PORT = process.env.PORT;
 
     app.set('trust proxy', 1);
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
     try {
 
