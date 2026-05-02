@@ -129,13 +129,21 @@ app.Lifetime.ApplicationStarted.Register(() =>
         {
             foreach (var addr in addresses)
             {
-                var health = $"{addr.TrimEnd('/')}/health";
-                startupLogger.LogInformation("API de AuthService está ejecutándose en {Url}. Endpoint de salud: {HealthUrl}", addr, health);
+                var baseUrl = addr.TrimEnd('/');
+                var health = $"{baseUrl}/health";
+                var swagger = $"{baseUrl}/swagger";
+
+                startupLogger.LogInformation(
+                    "API de AuthService está ejecutándose en {Url}. Health: {HealthUrl} | Swagger: {SwaggerUrl}",
+                    addr,
+                    health,
+                    swagger
+                );
             }
         }
         else
         {
-            startupLogger.LogInformation("API de AuthService iniciada. Endpoint de salud: /health");
+            startupLogger.LogInformation("API de AuthService iniciada. Health: /health | Swagger: /swagger");
         }
     }
     catch (Exception ex)

@@ -1,4 +1,3 @@
-using System;
 using AuthService.Application.DTOs;
 using AuthService.Application.DTOs.Email;
 using AuthService.Application.Interfaces;
@@ -6,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using AuthenticationService.Domain.Constants;
-using Microsoft.AspNetCore.Identity.Data;
 using AuthenticationService.Application.Interfaces;
 using AuthenticationService.Application.DTOs;
 
@@ -15,33 +13,31 @@ namespace AuthService.Api.Controllers;
 [ApiController]
 [Route("api/v1/auth")]
 [Tags("Authentication")]
-public class AuthController(IAuthService authService, IUserManagementService userManagementService, IRefreshTokenService refreshTokenService) : ControllerBase
+public class AuthController(
+    IAuthService authService,
+    IUserManagementService userManagementService,
+    IRefreshTokenService refreshTokenService) : ControllerBase
 {
-    // Refresh
+    /// <summary>Renovar access token usando refresh token</summary>
     [HttpPost("refresh")]
     [AllowAnonymous]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto dto)
     {
         var result = await refreshTokenService.RotateAsync(dto.RefreshToken);
-        
         return Ok(result);
     }
 
-    // Logout
+    /// <summary>Cerrar sesión (revoca el refresh token)</summary>
     [HttpPost("logout")]
     [Authorize]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
     public async Task<IActionResult> Logout([FromBody] RefreshRequestDto dto)
     {
         await refreshTokenService.RevokeAsync(dto.RefreshToken);
         return Ok(new { message = "Sesión cerrada" });
-    }
-
-    private async Task<bool> CurrentUserIsAdmin()
-    {
-        var userId = User.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
-        if (string.IsNullOrEmpty(userId)) return false;
-        var roles = await userManagementService.GetUserRolesAsync(userId);
-        return roles.Contains(RoleConstants.ADMIN_ROLE);
     }
 
     /// <summary>Iniciar sesión de usuario</summary>
@@ -56,6 +52,7 @@ public class AuthController(IAuthService authService, IUserManagementService use
     }
 
     /// <summary>Registrar nuevo usuario</summary>
+    /// <remarks>Envía imagen opcional (multipart/form-data)</remarks>
     [HttpPost("register")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(10 * 1024 * 1024)]
@@ -79,52 +76,68 @@ public class AuthController(IAuthService authService, IUserManagementService use
         return Ok(result);
     }
 
+    /// <summary>Reenviar correo de verificación</summary>
     [HttpPost("resend-verification")]
     [EnableRateLimiting("AuthPolicy")]
+    [ProducesResponseType(typeof(EmailResponseDto), 200)]
+    [ProducesResponseType(typeof(EmailResponseDto), 400)]
+    [ProducesResponseType(typeof(EmailResponseDto), 404)]
+    [ProducesResponseType(typeof(EmailResponseDto), 503)]
     public async Task<ActionResult<EmailResponseDto>> ResendVerification([FromBody] ResendVerificationDto resendDto)
     {
         var result = await authService.ResendVerificationEmailAsync(resendDto);
 
-        // Return appropriate status code based on result
         if (!result.Success)
         {
             if (result.Message.Contains("no encontrado", StringComparison.OrdinalIgnoreCase))
-            {
                 return NotFound(result);
-            }
+
             if (result.Message.Contains("ya ha sido verificado", StringComparison.OrdinalIgnoreCase) ||
                 result.Message.Contains("ya verificado", StringComparison.OrdinalIgnoreCase))
-            {
                 return BadRequest(result);
-            }
-            // Email sending failed - Service Unavailable
+
             return StatusCode(503, result);
         }
 
         return Ok(result);
     }
 
+    /// <summary>Solicitar recuperación de contraseña</summary>
     [HttpPost("forgot-password")]
     [EnableRateLimiting("AuthPolicy")]
-    public async Task<ActionResult<EmailResponseDto>> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
+    [ProducesResponseType(typeof(EmailResponseDto), 200)]
+    [ProducesResponseType(typeof(EmailResponseDto), 503)]
+    public async Task<ActionResult<EmailResponseDto>> ForgotPassword([FromBody] ForgotPasswordDto dto)
     {
-        var result = await authService.ForgotPasswordAsync(forgotPasswordDto);
+        var result = await authService.ForgotPasswordAsync(dto);
 
-        // ForgotPassword always returns success for security (even if user not found)
-        // But if email sending fails, return 503
         if (!result.Success)
-        {
             return StatusCode(503, result);
-        }
 
         return Ok(result);
     }
 
+    /// <summary>Restablecer contraseña</summary>
     [HttpPost("reset-password")]
     [EnableRateLimiting("AuthPolicy")]
-    public async Task<ActionResult<EmailResponseDto>> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
+    [ProducesResponseType(typeof(EmailResponseDto), 200)]
+    [ProducesResponseType(400)]
+    public async Task<ActionResult<EmailResponseDto>> ResetPassword([FromBody] ResetPasswordDto dto)
     {
-        var result = await authService.ResetPasswordAsync(resetPasswordDto);
+        var result = await authService.ResetPasswordAsync(dto);
         return Ok(result);
+    }
+
+    // Método interno (no documentado en Swagger)
+    private async Task<bool> CurrentUserIsAdmin()
+    {
+        var userId = User.Claims.FirstOrDefault(c =>
+            c.Type == "sub" ||
+            c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+        if (string.IsNullOrEmpty(userId)) return false;
+
+        var roles = await userManagementService.GetUserRolesAsync(userId);
+        return roles.Contains(RoleConstants.ADMIN_ROLE);
     }
 }
