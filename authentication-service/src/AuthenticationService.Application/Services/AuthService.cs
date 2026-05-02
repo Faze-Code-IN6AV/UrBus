@@ -10,10 +10,12 @@ using AuthenticationService.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using AuthService.Application.DTOs.Email;
+using AuthenticationService.Application.Interfaces;
 
 namespace AuthService.Application.Services;
 
 public class AuthService(
+    IRefreshTokenService refreshTokenService,
     IUserRepository userRepository,
     IRoleRepository roleRepository,
     IPasswordHashService passwordHashService,
@@ -195,7 +197,8 @@ public class AuthService(
         logger.LogUserLoggedIn();
 
         // Generar token JWT
-        var token = jwtTokenService.GenerateToken(user);
+        var token =  jwtTokenService.GenerateToken(user);
+        var (refreshToken, _) = await refreshTokenService.CreateAsync(user.Id);
         var expiryMinutes = int.Parse(configuration["JwtSettings:ExpiryInMinutes"] ?? "30");
 
         // Crear respuesta compacta
@@ -204,6 +207,7 @@ public class AuthService(
             Success = true,
             Message = "Login exitoso",
             Token = token,
+            RefreshToken = refreshToken,
             UserDetails = MapToUserDetailsDto(user),
             ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes)
         };
