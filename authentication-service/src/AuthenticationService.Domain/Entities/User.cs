@@ -38,12 +38,11 @@ public class User
     public DateTime UpdatedAt {get; set;} = DateTime.UtcNow;
     
     public UserProfile UserProfile {get; set;} = null!;
-
     public ICollection<UserRole> UserRoles {get; set;} = [];
-
     public UserEmail UserEmail {get; set;} = null!;
-
     public UserPasswordReset UserPasswordReset {get; set;} = null!;
+
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
     public Driver? Driver {get; set;} = null!;
     public Passenger? Passenger {get; set;} = null!;

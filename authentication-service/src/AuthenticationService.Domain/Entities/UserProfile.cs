@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace AuthenticationService.Domain.Entities;
@@ -20,5 +19,6 @@ public class UserProfile
     [StringLength(8, MinimumLength = 8, ErrorMessage = "El número de teléfono debe de tener exactamente 8 caracteres.")]
     [RegularExpression(@"^\d{8}$", ErrorMessage = "El número de teléfono debe de contener solo números.")]
     public string Phone {get; set;} = string.Empty;
+
     public User User {get; set;} = null!;
 }
