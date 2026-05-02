@@ -7,42 +7,49 @@ import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import { readFileSync } from 'fs';
 import { parse } from 'yaml';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 import { dbConnection } from './db.js';
 import { helmetOptions } from './helmet.configuration.js';
 import { corsOptions } from './cors.configuration.js';
 import { requestLimit } from './rateLimit.configuration.js';
-
 import postRoutes from '../src/posts/post.routes.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const BASE_PATH = '/urbus/v1';
-const swaggerDoc = parse(readFileSync('./swagger.yaml', 'utf8'));
+const swaggerDoc = parse(readFileSync(join(__dirname, '../swagger.yaml'), 'utf8'));
+
+const middlewares = (app) => {
+    app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+    app.use(express.json({ limit: '10mb' }));
+    app.use(cors(corsOptions));
+    app.use(morgan('dev'));
+    app.use(helmet(helmetOptions));
+    app.use(requestLimit);
+};
+
+const routes = (app) => {
+    app.use(`${BASE_PATH}/posts`, postRoutes);
+
+    app.get(`${BASE_PATH}/health`, (req, res) => {
+        res.status(200).json({
+            status: 'healthy',
+            service: 'UrBus Post Service'
+        });
+    });
+};
 
 export const initServer = async () => {
     const app = express();
     const PORT = process.env.PORT || 5001;
-
     app.set('trust proxy', 1);
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
     try {
         await dbConnection();
-
-        app.use(express.urlencoded({ extended: false, limit: '10mb' }));
-        app.use(express.json({ limit: '10mb' }));
-        app.use(cors(corsOptions));
-        app.use(morgan('dev'));
-        app.use(helmet(helmetOptions));
-        app.use(requestLimit);
-
-        app.use(`${BASE_PATH}/posts`, postRoutes);
-
-        app.get(`${BASE_PATH}/health`, (req, res) => {
-            res.status(200).json({
-                status: 'healthy',
-                service: 'UrBus Post Service'
-            });
-        });
+        middlewares(app);
+        routes(app);
+        app.use(`${BASE_PATH}/swagger`, swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
         app.use((req, res) => {
             res.status(404).json({
@@ -54,6 +61,7 @@ export const initServer = async () => {
         app.listen(PORT, () => {
             console.log(`Post Service ejecutándose en puerto: ${PORT}`);
             console.log(`Health: http://localhost:${PORT}${BASE_PATH}/health`);
+            console.log(`Swagger: http://localhost:${PORT}${BASE_PATH}/swagger`);
         });
 
     } catch (err) {

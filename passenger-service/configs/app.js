@@ -7,17 +7,19 @@ import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import { readFileSync } from 'fs';
 import { parse } from 'yaml';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 import { dbConnection } from './db.js';
 import { corsOptions } from './cors.configuration.js';
 import { helmetOptions } from './helmet.configuration.js';
 import { requestLimit } from './rateLimit.configuration.js';
 import { errorHandler } from '../middlewares/handle-errors.js';
-
 import passengerRoutes from '../src/passenger/passenger.routes.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const BASE_PATH = '/urbus/v1';
-const swaggerDoc = parse(readFileSync('./swagger.yaml', 'utf8'));
+const swaggerDoc = parse(readFileSync(join(__dirname, '../swagger.yaml'), 'utf8'));
 
 const middlewares = (app) => {
     app.use(express.urlencoded({ extended: false, limit: '10mb' }));
@@ -29,7 +31,6 @@ const middlewares = (app) => {
 };
 
 const routes = (app) => {
-
     app.get(`${BASE_PATH}/health`, (req, res) => {
         res.status(200).json({
             status: 'healthy',
@@ -41,32 +42,25 @@ const routes = (app) => {
 };
 
 export const initServer = async () => {
-
     const app = express();
     const PORT = process.env.PORT;
-
     app.set('trust proxy', 1);
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
     try {
-
         await dbConnection();
-
         middlewares(app);
-
         routes(app);
-
+        app.use(`${BASE_PATH}/swagger`, swaggerUi.serve, swaggerUi.setup(swaggerDoc));
         app.use(errorHandler);
 
         app.listen(PORT, () => {
             console.log(`Passenger Server running on port: ${PORT}`);
             console.log(`Health Check: http://localhost:${PORT}${BASE_PATH}/health`);
+            console.log(`Swagger: http://localhost:${PORT}${BASE_PATH}/swagger`);
         });
 
     } catch (err) {
-
         console.error(`Error al iniciar el servidor: ${err.message}`);
-
         process.exit(1);
     }
 };

@@ -86,6 +86,7 @@ export const initServer = async () => {
         server.listen(PORT, () => {
             console.log(`UrBus Location Service running on port: ${PORT}`);
             console.log(`Health Check: http://localhost:${PORT}${BASE_PATH}/health`);
+            console.log(`Documentation Check: http://localhost:${PORT}${BASE_PATH}/swagger`);
         });
 
     } catch (err) {
