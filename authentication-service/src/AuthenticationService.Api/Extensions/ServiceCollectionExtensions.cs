@@ -7,6 +7,8 @@ using AuthenticationService.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using AuthenticationService.Application.Interfaces;
+using AuthService.Persistence.Repositories;
 
 namespace AuthService.Api.Extensions;
 
@@ -26,6 +28,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ICloudinaryService, CloudinaryService>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         services.AddHealthChecks();
         return services;

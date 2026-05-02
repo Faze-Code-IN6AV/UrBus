@@ -13,6 +13,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<UserProfile> UserProfiles {get; set;}
     public DbSet<UserEmail> UserEmails {get; set;}
     public DbSet<UserPasswordReset> UserPasswordResets {get; set;}
+    public DbSet<RefreshToken>? RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
