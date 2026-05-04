@@ -123,33 +123,47 @@ Microservicio encargado de la autenticación y gestión de usuarios.
 * Registro de usuarios
 * Inicio de sesión
 * Verificación de correo electrónico
-* Gestión de roles
+* Gestión de roles y control de acceso
+* Recuperación y restablecimiento de contraseña
 * Control de acceso mediante JWT
- 
+* Renovación de tokens
+
 ### Endpoints
- 
+
 **Base URL:**
- 
+
 ```
 http://localhost:5166/api/v1
 ```
- 
-| Método | Endpoint             | Descripción                   |
-| ------ | -------------------- | ----------------------------- |
-| GET    | /health              | Verificar estado del servicio |
-| POST   | /auth/login          | Iniciar sesión                |
-| POST   | /auth/register       | Registrar usuario             |
-| POST   | /auth/verify-email   | Verificar correo              |
-| PUT    | /users/{userId}/role | Actualizar rol                |
- 
----
- 
-## LocationService
- 
-Servicio encargado de mostrar la ubicación del bus en tiempo real.
- 
-### Funcionalidades
- 
+
+#### Health Check
+
+| Método | Endpoint | Descripción              | Autenticación |
+| ------ | -------- | ------------------------ | -------------- |
+| GET    | /health  | Verificar estado del servicio | No |
+| GET    | /swagger | Documentación de la API (Swagger UI) | No |
+
+#### Autenticación (Auth)
+
+| Método | Endpoint                    | Descripción                              | Autenticación |
+| ------ | ----------------------------- | ---------------------------------------- | -------------- |
+| POST   | /auth/login                 | Iniciar sesión de usuario                | No |
+| POST   | /auth/register              | Registrar nuevo usuario                  | No |
+| POST   | /auth/verify-email          | Verificar correo electrónico              | No |
+| POST   | /auth/resend-verification   | Reenviar correo de verificación          | No |
+| POST   | /auth/forgot-password       | Solicitar recuperación de contraseña      | No |
+| POST   | /auth/reset-password        | Restablecer contraseña                   | No |
+| POST   | /auth/refresh               | Renovar access token usando refresh token | No |
+| POST   | /auth/logout                | Cerrar sesión (revocar refresh token)    | Sí (JWT) |
+
+#### Gestión de Usuarios (User Management)
+
+| Método | Endpoint              | Descripción                     | Autenticación | Roles |
+| ------ | ---------------------- | ------------------------------- | -------------- | -------- |
+| PUT    | /users/{userId}/role  | Actualizar rol de usuario       | Sí (JWT)      | ADMIN_ROLE |
+| GET    | /users/{userId}/roles | Obtener roles de un usuario     | Sí (JWT)      | ADMIN_ROLE |
+| GET    | /users/by-role        | Listar usuarios por rol         | Sí (JWT)      | ADMIN_ROLE |
+
 * Visualización del bus en mapa
 * Seguimiento en tiempo real
 * Definición de destino
@@ -166,6 +180,7 @@ http://localhost:3033/UrBus/v1
 | ------ | -------- | ------------------- |
 | GET    | /health  | Estado del servicio |
 | GET    | /        | Obtener ubicación   |
+| GET    | /swagger | Documentación de la API (Swagger UI) |
  
 ---
  
@@ -202,6 +217,7 @@ http://localhost:5000/urbus/v1
 | POST   | /route-change | Cambio de ruta        |
 | POST   | /custom       | Mensaje personalizado |
 | GET    | /groups       | Obtener grupos        |
+| GET    | /swagger      | Documentación de la API (Swagger UI) |
  
 ---
  
@@ -230,6 +246,7 @@ http://localhost:3011/urbus/v1/passengers
 | GET    | /           | Listar pasajeros  |
 | PATCH  | /:id/status | Actualizar estado |
 | DELETE | /:id        | Eliminar pasajero |
+| GET    | /swagger    | Documentación de la API (Swagger UI) |
  
 ---
  
@@ -261,6 +278,7 @@ http://localhost:5001/urbus/v1/posts
 | PUT    | /:id            | Actualizar            |
 | DELETE | /:id            | Eliminar              |
 | PATCH  | /:id/reactivate | Reactivar             |
+| GET    | /swagger        | Documentación de la API (Swagger UI) |
  
 ---
  
