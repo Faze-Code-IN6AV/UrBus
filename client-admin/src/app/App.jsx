@@ -1,15 +1,8 @@
 import { AppRouter } from './router/AppRouter';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { useAuthStore } from '../features/auth/store/authStore';
-import { UiConfirmHost } from '../features/auth/components/ConfirmModal.jsx';
 
 export const App = () => {
-  const checkAuth = useAuthStore((state) => state.checkAuth);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
 
   return (
     <>
@@ -24,7 +17,6 @@ export const App = () => {
           },
         }}
       />
-      <UiConfirmHost />
       <AppRouter />
     </>
   );
