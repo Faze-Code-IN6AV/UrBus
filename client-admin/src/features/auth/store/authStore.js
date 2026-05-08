@@ -10,6 +10,7 @@ export const useAuthStore = create(
         (set, get) => ({
         user: null,
         token: null,
+        refreshToken: null,
         expiresAt: null,
         loading: false,
         error: null,
@@ -26,6 +27,7 @@ export const useAuthStore = create(
             set({
                 user: null,
                 token: null,
+                refreshToken: null,
                 expiresAt: null,
                 isAuthenticated: false,
                 isLoadingAuth: false,
@@ -44,6 +46,7 @@ export const useAuthStore = create(
             set({
             user: null,
             token: null,
+            refreshToken: null,
             expiresAt: null,
             isAuthenticated: false,
             });
@@ -53,21 +56,22 @@ export const useAuthStore = create(
             try {
             set({ loading: true, error: null });
             const { data } = await loginRequest({ emailOrUsername, password });
-
-            // El backend de PaySmart retorna: { success, message, token, userDetails, expiresAt }
             const role = data?.userDetails?.role;
 
             if (!ALLOWED_ROLES.includes(role)) {
                 const message = 'No tienes permisos para acceder a esta aplicación';
+                
                 set({
-                user: null,
-                token: null,
-                expiresAt: null,
-                isAuthenticated: false,
-                isLoadingAuth: false,
-                error: message,
-                loading: false,
+                    user: null,
+                    token: null,
+                    refreshToken: null,
+                    expiresAt: null,
+                    isAuthenticated: false,
+                    isLoadingAuth: false,
+                    error: message,
+                    loading: false,
                 });
+
                 showError(message);
                 return { success: false, error: message };
             }
@@ -75,6 +79,7 @@ export const useAuthStore = create(
             set({
                 user: data.userDetails,
                 token: data.token,
+                refreshToken: data.refreshToken,
                 expiresAt: data.expiresAt,
                 isAuthenticated: true,
                 isLoadingAuth: false,
@@ -84,9 +89,9 @@ export const useAuthStore = create(
 
             return { success: true, role };
             } catch (err) {
-            const message = err.response?.data?.message || 'Error al iniciar sesión';
-            set({ error: message, loading: false });
-            return { success: false, error: message };
+                const message = err.response?.data?.message || 'Error al iniciar sesión';
+                set({ error: message, loading: false });
+                return { success: false, error: message };
             }
         },
 
