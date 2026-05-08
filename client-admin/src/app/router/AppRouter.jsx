@@ -1,17 +1,19 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardPage } from '../layouts/DashboardPage.jsx';
+import { ProtectedRoute } from './ProtecterRoute.jsx';
+
 export const AppRouter = () => {
   return (
     <Routes>
       <Route
         path='/dashboard/*'
         element={
-          <ProtecterRoute>
-              <DashboardPage />
-          </ProtecterRoute>
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
         }
-      >
-      </Route>
+      />
+      <Route path='*' element={<Navigate to='/dashboard' replace />} />
     </Routes>
   );
 };

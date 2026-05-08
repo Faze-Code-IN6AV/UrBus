@@ -117,3 +117,6 @@ StyleCopReport.xml
 # WhatsApp Web session
 .wwebjs_auth/
 .wwebjs_cache/
+
+# Zip files
+client-admin.zip
