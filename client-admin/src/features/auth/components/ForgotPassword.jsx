@@ -1,27 +1,44 @@
-import { useState } from "react";
+/*import { useState } from "react";
 import urbuLogo from "../../../assets/img/UrBus-logo.png";
 import { Spinner } from "./Spinner.jsx";
-
+import { forgotPassword } from "../../../shared/api";
+import { showError, showSuccess } from "../../../shared/utils/toast.js";
+ 
 const EmailIcon = () => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
         <rect x="3" y="5" width="18" height="14" rx="2" stroke="#9ca3af" strokeWidth="2" />
         <path d="M3 7l9 6 9-6" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" />
     </svg>
 );
-
+ 
 export const ForgotPassword = ({ onNavigate }) => {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
-
-    const handleSubmit = () => {
+ 
+    const handleSubmit = async () => {
+        if (!email.trim()) {
+            showError("Por favor ingresa tu correo electrónico.");
+            return;
+        }
+ 
         setLoading(true);
-        setTimeout(() => {
-        setLoading(false);
-        setSent(true);
-        }, 1500);
+        try {
+            await forgotPassword(email.trim());
+            setSent(true);
+            showSuccess("Si el correo existe, recibirás instrucciones.");
+        } catch (err) {
+            const message = err.response?.data?.message || "Error al enviar el correo de recuperación.";
+            showError(message);
+        } finally {
+            setLoading(false);
+        }
     };
-
+ 
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") handleSubmit();
+    };
+ 
     return (
         <>
         <h1 className="text-2xl font-bold text-gray-800 text-center mb-2">
@@ -32,14 +49,14 @@ export const ForgotPassword = ({ onNavigate }) => {
             ? "¡Revisa tu correo! Te enviamos instrucciones para restablecer tu contraseña."
             : "Ingresa tu correo y te enviaremos instrucciones para restablecer tu contraseña."}
         </p>
-
+ 
         <div
             className="rounded-full border-[3px] bg-white overflow-hidden flex items-center justify-center shadow-md mb-6"
             style={{ borderColor: "#f0c030", width: 110, height: 110 }}
         >
             <img src={urbuLogo} alt="UrBus Logo" className="w-24 h-24 object-contain" />
         </div>
-
+ 
         {!sent && (
             <>
             <div className="flex items-center bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 gap-3 w-full">
@@ -49,10 +66,11 @@ export const ForgotPassword = ({ onNavigate }) => {
                 placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="flex-1 outline-none text-gray-700 text-sm bg-transparent placeholder-gray-400"
                 />
             </div>
-
+ 
             <button
                 onClick={handleSubmit}
                 disabled={loading}
@@ -63,7 +81,7 @@ export const ForgotPassword = ({ onNavigate }) => {
             </button>
             </>
         )}
-
+ 
         {sent && (
             <button
             onClick={() => { setSent(false); setEmail(""); onNavigate("login"); }}
@@ -73,7 +91,7 @@ export const ForgotPassword = ({ onNavigate }) => {
             Volver al Login
             </button>
         )}
-
+ 
         <p className="text-center text-sm text-gray-500 mt-2">
             ¿Recordaste tu contraseña?{" "}
             <button onClick={() => onNavigate("login")} className="font-semibold" style={{ color: "#2196F3" }}>
@@ -83,3 +101,4 @@ export const ForgotPassword = ({ onNavigate }) => {
         </>
     );
 }
+*/
