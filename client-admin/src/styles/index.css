@@ -1,7 +1,11 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-main-blue: #08316d;
+  --color-main-blue: #005691;
+  --color-main-yellow: #FFC107;
+  --color-sky-blue: #03A9F4;
+  --color-bus-blue: #1E88E5;
+  --color-orange-pin: #EF6C00;
 }
 
 :root {
@@ -9,7 +13,11 @@
   line-height: 1.5;
   font-weight: 400;
 
-  --main-blue: #08316d;
+  --main-blue: #005691;
+  --main-yellow: #FFC107;
+  --sky-blue: #03A9F4;
+  --bus-blue: #1E88E5;
+  --orange-pin: #EF6C00;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -18,19 +26,73 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fadeIn {
   animation: fadeIn 0.15s ease-out;
+}
+
+/* Sidebar responsive */
+.sidebar {
+  width: 220px;
+  transition: width 0.25s ease, transform 0.25s ease;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 50;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 40;
+  }
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+/* Navbar responsive */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.navbar-menu-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .navbar-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #111827;
+    padding: 6px;
+    border-radius: 6px;
+  }
 }
 
 .sidebar-underline {
@@ -46,9 +108,9 @@
   border-radius: 6px;
   background: linear-gradient(
     90deg,
-    rgba(8, 49, 109, 0.18) 0%,
-    #08316d 50%,
-    rgba(8, 49, 109, 0.18) 100%
+    rgba(0, 86, 145, 0.18) 0%,
+    #005691 50%,
+    rgba(0, 86, 145, 0.18) 100%
   );
   filter: blur(1.5px);
   z-index: 1;
