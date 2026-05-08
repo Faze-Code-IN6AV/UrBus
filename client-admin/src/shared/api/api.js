@@ -13,4 +13,103 @@ const axiosAdmin = axios.create({
     headers: { 'Content-Type': 'application/json' },
 });
 
+axiosAuth.interceptors.request.use((config) => {
+    const token = useAuthStore.getState().token;
+    config._axiosClient = 'auth';
+
+    if(token) config.headers.Authorization = `Bearer ${token}`;
+
+    return config;
+});
+
+axiosAdmin.interceptors.request.use((config) => {
+    const token = useAuthStore.getState().token;
+    config._axiosClient = 'admin';
+
+    if(token) config.headers.Authorization = `Bearer ${token}`;
+
+    return config;
+});
+
+// --- Lógica para refreshToken-service ---
+let _isRefreshing = false;
+let failedQueue = [];
+
+function _processQueue(_error, token = null) {
+    failedQueue.forEach(({ resolve, reject }) => (_error ? reject(_error) : resolve(token)));
+    failedQueue = [];
+}
+
+const handleRefreshToken = async function (_error) {
+    const _original = _error.config;
+
+    if(!_original || _original._retry){
+        return Promise.reject(_error);
+    }
+
+    const status = _error.response?.status;
+    const errorCode = _error.response?.data?.error;
+    const requestUrl = _original.url || '';
+    const isRefreshEndpoint = requestUrl.includes('/auth/refresh');
+    const shouldAttemptRefresh = !isRefreshEndpoint && status === 401;
+    const shouldAttemptRefreshFrom403 = !isRefreshEndpoint && status === 403 && errorCode === 'TOKEN_EXPIRED';
+    const shouldRefresh = shouldAttemptRefresh || shouldAttemptRefreshFrom403;
+
+    if(shouldRefresh){
+        const retryClient = _original._axiosClient === 'admin' ? axiosAdmin : axiosAuth;
+
+        if(_isRefreshing){
+            return new Promise(function (resolve, reject) {
+                failedQueue.push({ resolve, reject });
+            }).then((token) => {
+                _original.headers['Authorization'] = 'Bearer ' + token;
+
+                return retryClient(_original);
+            }).catch((err) => Promise.reject(err));
+        }
+
+        _original._retry = true;
+        _isRefreshing = true;
+
+        const refreshToken = useAuthStore.getState().refreshToken;
+
+        if(!refreshToken){
+            useAuthStore.getState().logout();
+
+            return Promise.reject(_error);
+        }
+
+        try{
+            const response = await axiosAuth.post('/auth/refresh', { refreshToken });
+            const { token, refreshToken: newRefreshToken, expiresAt, userDetails } = response.data;
+
+            useAuthStore.setState({
+                token: token,
+                refreshToken: newRefreshToken,
+                expiresAt: expiresAt,
+                user: userDetails || useAuthStore.getState().user,
+                isAuthenticated: true,
+            });
+
+            _processQueue(null, token);
+            _original.headers['Authorization'] = 'Bearer ' + token;
+
+            return retryClient(_original);
+        }catch(err){
+            _processQueue(err, null);
+            useAuthStore.getState().logout();
+            return Promise.reject(err);
+        }finally{
+            _isRefreshing = false;
+        }
+    }
+
+    return Promise.reject(_error);
+}
+
+axiosAuth.interceptors.response.use((res) => res, handleRefreshToken);
+axiosAdmin.interceptors.response.use((res) => res, handleRefreshToken);
+
+// ------
+
 export { axiosAuth, axiosAdmin };
