@@ -3,6 +3,8 @@ import { DashboardPage } from '../layouts/DashboardPage.jsx';
 import { ProtectedRoute } from './ProtecterRoute.jsx';
 // Auth
 import { AuthPage } from '../../features/auth/pages/AuthPage.jsx';
+// Location
+import { LocationPage } from '../../features/location/pages/LocationPage.jsx';
 //import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
 //import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.jsx';
 
@@ -14,13 +16,18 @@ export const AppRouter = () => {
       <Route path='/reset-password' element={<ResetPasswordPage/>}/>*/}
 
       <Route
-        path='/dashboard/*'
+        path='/dashboard'
         element={
           <ProtectedRoute>
             <DashboardPage />
           </ProtectedRoute>
         }
-      />
+      >
+        {/* Mapa como página de inicio por defecto */}
+        <Route index element={<LocationPage />} />
+        <Route path='location' element={<LocationPage />} />
+      </Route>
+
       <Route path='*' element={<Navigate to='/dashboard' replace />} />
     </Routes>
   );

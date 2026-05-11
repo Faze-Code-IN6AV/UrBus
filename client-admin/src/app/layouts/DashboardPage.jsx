@@ -1,16 +1,53 @@
 import { useState, useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, NavLink } from "react-router-dom";
+import { useAuthStore } from "../../features/auth/store/authStore.js";
+import { styles } from "../../styles/dashboard.js";
+
+const NAV_ITEMS = [
+  {
+    label: "Mapa en Vivo",
+    path: "/dashboard/location",
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2" />
+        <line x1="8" y1="2" x2="8" y2="18" />
+        <line x1="16" y1="6" x2="16" y2="22" />
+      </svg>
+    ),
+  },
+];
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  // Inicial del usuario para el avatar
+  const avatarLetter = user?.name
+    ? user.name.charAt(0).toUpperCase()
+    : user?.role === "ADMIN_ROLE"
+    ? "A"
+    : "U";
+
+  // Título de la página actual
+  const currentPage = NAV_ITEMS.find((item) =>
+    location.pathname === item.path || location.pathname.startsWith(item.path + "/")
+  );
+  const pageTitle = currentPage?.label ?? "Panel de Administración";
 
   return (
     <div style={styles.root}>
@@ -20,20 +57,82 @@ export const DashboardPage = () => {
       )}
 
       {/* SIDEBAR */}
-      <aside style={{
-        ...styles.sidebar,
-        ...(isMobile ? {
-          position: "fixed",
-          top: 0,
-          left: 0,
-          height: "100vh",
-          zIndex: 50,
-          transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.25s ease",
-        } : {}),
-      }}>
+      <aside
+        style={{
+          ...styles.sidebar,
+          ...(isMobile
+            ? {
+                position: "fixed",
+                top: 0,
+                left: 0,
+                height: "100vh",
+                zIndex: 50,
+                transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+                transition: "transform 0.25s ease",
+              }
+            : {}),
+        }}
+      >
+        {/* Logo */}
         <div style={styles.logoArea}>
+          <div style={styles.logoBadge}>U</div>
           <span style={styles.logoText}>UrBus</span>
+        </div>
+
+        {/* Navegación */}
+        <nav style={styles.nav}>
+          <p style={styles.navGroup}>Principal</p>
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              location.pathname === item.path ||
+              location.pathname.startsWith(item.path + "/");
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end
+                style={{ textDecoration: "none" }}
+                onClick={() => isMobile && setSidebarOpen(false)}
+              >
+                <div
+                  style={{
+                    ...styles.navItem,
+                    ...(isActive ? styles.navItemActive : {}),
+                  }}
+                >
+                  <span
+                    style={{
+                      ...styles.navIcon,
+                      color: isActive ? "#005691" : "rgba(255,255,255,0.55)",
+                    }}
+                  >
+                    {item.icon}
+                  </span>
+                  <span
+                    style={{
+                      ...styles.navLabel,
+                      color: isActive ? "#fff" : "rgba(255,255,255,0.7)",
+                      fontWeight: isActive ? "600" : "400",
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  {isActive && <span style={styles.activeBar} />}
+                </div>
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* Info del usuario en el sidebar */}
+        <div style={styles.sidebarUser}>
+          <div style={styles.sidebarAvatar}>{avatarLetter}</div>
+          <div style={styles.sidebarUserInfo}>
+            <p style={styles.sidebarUserName}>{user?.name ?? "Usuario"}</p>
+            <p style={styles.sidebarUserRole}>
+              {user?.role === "ADMIN_ROLE" ? "Administrador" : "Pasajero"}
+            </p>
+          </div>
         </div>
       </aside>
 
@@ -44,21 +143,21 @@ export const DashboardPage = () => {
             {isMobile && (
               <button style={styles.menuBtn} onClick={() => setSidebarOpen(true)}>
                 <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <line x1="3" y1="6" x2="21" y2="6"/>
-                  <line x1="3" y1="12" x2="21" y2="12"/>
-                  <line x1="3" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
                 </svg>
               </button>
             )}
-            <span style={styles.pageTitle}>Panel de Administración</span>
+            <span style={styles.pageTitle}>{pageTitle}</span>
           </div>
           <div style={styles.headerRight}>
-            <div style={styles.avatar}>A</div>
-            <button style={styles.logoutBtn} onClick={() => navigate("/")}>
+            <div style={styles.avatar}>{avatarLetter}</div>
+            <button style={styles.logoutBtn} onClick={handleLogout}>
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16,17 21,12 16,7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16,17 21,12 16,7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
               {!isMobile && "Salir"}
             </button>
@@ -70,21 +169,4 @@ export const DashboardPage = () => {
       </div>
     </div>
   );
-};
-
-const styles = {
-  root: { display: "flex", height: "100vh", fontFamily: "'Segoe UI', sans-serif", overflow: "hidden" },
-  overlay: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 40 },
-  sidebar: { width: "220px", background: "#1a1f2e", display: "flex", flexDirection: "column", flexShrink: 0 },
-  logoArea: { padding: "18px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" },
-  logoText: { color: "#fff", fontWeight: "700", fontSize: "18px" },
-  main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "#f4f6fb" },
-  header: { background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 24px", height: "52px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 },
-  headerLeft: { display: "flex", alignItems: "center", gap: "12px" },
-  pageTitle: { fontSize: "15px", fontWeight: "600", color: "#111827" },
-  headerRight: { display: "flex", alignItems: "center", gap: "12px" },
-  avatar: { width: "34px", height: "34px", borderRadius: "50%", background: "#005691", color: "#fff", fontWeight: "700", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center" },
-  menuBtn: { display: "flex", alignItems: "center", background: "transparent", border: "none", cursor: "pointer", color: "#111827", padding: "4px" },
-  logoutBtn: { display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", background: "transparent", border: "1px solid #e5e7eb", borderRadius: "8px", color: "#6b7280", fontSize: "13px", cursor: "pointer" },
-  content: { flex: 1, overflow: "auto", padding: "28px" },
 };
