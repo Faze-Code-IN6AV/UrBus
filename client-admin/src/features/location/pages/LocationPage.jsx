@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import { styles } from '../../../styles/location.js';
 
@@ -128,11 +129,15 @@ export const LocationPage = () => {
             hasArrivedRef.current = true;
             busMarkerRef.current.setPopupContent('¡Llegó a Kinal! 🎉').openPopup();
             setBusStatus('¡Llegó a Kinal! 🎉');
+            toast.success('¡El bus llegó a Kinal! 🚌', { duration: 5000 });
           }
         });
 
         socket.on('busArrived', () => {
-          if (mounted) setBusStatus('¡Llegó a Kinal! 🎉');
+          if (mounted) {
+            setBusStatus('¡Llegó a Kinal! 🎉');
+            toast.success('¡El bus llegó a Kinal! 🚌', { duration: 5000 });
+          }
         });
       }
     };
