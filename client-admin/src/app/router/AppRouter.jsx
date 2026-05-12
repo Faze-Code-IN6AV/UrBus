@@ -5,6 +5,8 @@ import { ProtectedRoute } from './ProtecterRoute.jsx';
 import { AuthPage } from '../../features/auth/pages/AuthPage.jsx';
 // Location
 import { LocationPage } from '../../features/location/pages/LocationPage.jsx';
+// Passengers
+import { PassengerListPage } from '../../features/passangers/pages/PassengerListPage.jsx';
 //import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
 //import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.jsx';
 
@@ -23,9 +25,10 @@ export const AppRouter = () => {
           </ProtectedRoute>
         }
       >
-        {/* Mapa como página de inicio por defecto */}
+        {/* Mapa como pÃ¡gina de inicio por defecto */}
         <Route index element={<LocationPage />} />
         <Route path='location' element={<LocationPage />} />
+        <Route path='passengers' element={<PassengerListPage />} />
       </Route>
 
       <Route path='*' element={<Navigate to='/dashboard' replace />} />
