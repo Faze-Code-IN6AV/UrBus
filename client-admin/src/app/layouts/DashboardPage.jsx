@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation, NavLink } from "react-router-dom";
 import { useAuthStore } from "../../features/auth/store/authStore.js";
 import { styles } from "../../styles/dashboard.js";
+import { WhatsAppBubble } from "../../features/whatsapp/components/WhatsAppBubble.jsx";
 
 const NAV_ITEMS = [
   {
@@ -179,6 +180,9 @@ export const DashboardPage = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* Burbuja de WhatsApp — solo para administradores */}
+      {user?.role === "ADMIN_ROLE" && <WhatsAppBubble />}
     </div>
   );
 };

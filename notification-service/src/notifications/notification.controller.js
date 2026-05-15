@@ -5,6 +5,7 @@ import {
   notifyCustom,
   listGroups
 } from './notification.service.js';
+import { getStatus, getQRImage } from './whatsapp.service.js';
 
 const isGroup = (number) => {
   return typeof number === 'string' && number.endsWith('@g.us');
@@ -160,6 +161,34 @@ export const getWhatsAppGroups = async (req, res) => {
       groups
     });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+export const getWhatsAppStatus = (req, res) => {
+  try {
+    const status = getStatus();
+    res.status(200).json({ success: true, ...status });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getWhatsAppQR = async (req, res) => {
+  try {
+    const { isReady } = getStatus();
+
+    if (isReady) {
+      return res.status(200).json({ success: true, isReady: true, qr: null });
+    }
+
+    const qr = await getQRImage();
+
+    if (!qr) {
+      return res.status(200).json({ success: true, isReady: false, qr: null, message: 'QR aún no generado, espera unos segundos' });
+    }
+
+    res.status(200).json({ success: true, isReady: false, qr });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
