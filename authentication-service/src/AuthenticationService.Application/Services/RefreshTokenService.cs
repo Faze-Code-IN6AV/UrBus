@@ -79,8 +79,4 @@ public class RefreshTokenService : IRefreshTokenService
         }
     }
 
-    Task<RefreshResponseDto> IRefreshTokenService.RotateAsync(string rawToken)
-    {
-        throw new NotImplementedException();
-    }
 }
