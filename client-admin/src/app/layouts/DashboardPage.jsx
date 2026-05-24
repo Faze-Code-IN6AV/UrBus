@@ -29,7 +29,7 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: "Post",
+    label: "Publicaciones",
     path: "/dashboard/posts",
     icon: (
       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

@@ -58,7 +58,8 @@ export const PostListPage = () => {
     const user = useAuthStore((s) => s.user);
     const isAdmin = user?.role === 'ADMIN_ROLE';
 
-    const posts = usePostStore((s) => s.posts);
+    const postsState = usePostStore((s) => s.posts);
+    const posts = Array.isArray(postsState) ? postsState : [];
     const loading = usePostStore((s) => s.loading);
     const error = usePostStore((s) => s.error);
     const fetchPosts = usePostStore((s) => s.fetchPosts);

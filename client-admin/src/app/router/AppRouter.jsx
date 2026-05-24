@@ -9,7 +9,7 @@ import { LocationPage } from '../../features/location/pages/LocationPage.jsx';
 import { PassengerListPage } from '../../features/passangers/pages/PassengerListPage.jsx';
 //import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
 //import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.jsx';
-import { PostListPage } from '../../features/posts/pages/PostListPage.jsx';
+import { PostListPage } from '../../features/post/pages/PostListPage.jsx';
 
 export const AppRouter = () => {
   return (

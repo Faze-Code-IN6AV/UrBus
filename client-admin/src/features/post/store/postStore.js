@@ -17,7 +17,12 @@ export const usePostStore = create((set, get) => ({
         try {
             set({ loading: true, error: null });
             const { data } = await getPosts();
-            set({ posts: data ?? [] });
+            const postsData = Array.isArray(data)
+                ? data
+                : Array.isArray(data?.posts)
+                ? data.posts
+                : [];
+            set({ posts: postsData });
         } catch (err) {
             const msg = err.response?.data?.message || 'Error al cargar anuncios';
             set({ error: msg });
