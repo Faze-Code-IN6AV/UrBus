@@ -16,6 +16,9 @@ axiosPost.interceptors.request.use((config) => {
 export const getPosts = () =>
     axiosPost.get('/posts');
 
+export const getMyPosts = () =>
+    axiosPost.get('/posts/my-posts');
+
 export const getPostById = (id) =>
     axiosPost.get(`/posts/${id}`);
 
