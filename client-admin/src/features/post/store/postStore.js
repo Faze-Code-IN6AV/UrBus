@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import {
     getPosts,
+    getMyPosts,
     createPost,
     updatePost,
     deletePost,
@@ -10,6 +11,7 @@ import { showSuccess, showError } from '../../../shared/utils/toast.js';
 
 export const usePostStore = create((set, get) => ({
     posts: [],
+    myPosts: [],
     loading: false,
     error: null,
 
@@ -32,11 +34,33 @@ export const usePostStore = create((set, get) => ({
         }
     },
 
+    fetchMyPosts: async () => {
+        try {
+            set({ loading: true, error: null });
+            const { data } = await getMyPosts();
+            const postsData = Array.isArray(data)
+                ? data
+                : Array.isArray(data?.posts)
+                ? data.posts
+                : [];
+            set({ myPosts: postsData });
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Error al cargar tus anuncios';
+            set({ error: msg });
+            showError(msg);
+        } finally {
+            set({ loading: false });
+        }
+    },
+
     addPost: async (formData) => {
         try {
             set({ loading: true, error: null });
             const { data } = await createPost(formData);
-            set((state) => ({ posts: [data.post, ...state.posts] }));
+            set((state) => ({
+                posts: [data.post, ...state.posts],
+                myPosts: [data.post, ...state.myPosts],
+            }));
             showSuccess('Anuncio creado correctamente');
             return { success: true };
         } catch (err) {
@@ -55,6 +79,7 @@ export const usePostStore = create((set, get) => ({
             const { data } = await updatePost(id, formData);
             set((state) => ({
                 posts: state.posts.map((p) => (p._id === id ? data.post : p)),
+                myPosts: state.myPosts.map((p) => (p._id === id ? data.post : p)),
             }));
             showSuccess('Anuncio actualizado');
             return { success: true };
@@ -70,14 +95,16 @@ export const usePostStore = create((set, get) => ({
 
     removePost: async (id) => {
         const snapshot = get().posts;
+        const mySnapshot = get().myPosts;
         set((state) => ({
             posts: state.posts.map((p) => (p._id === id ? { ...p, isDeleted: true } : p)),
+            myPosts: state.myPosts.map((p) => (p._id === id ? { ...p, isDeleted: true } : p)),
         }));
         try {
             await deletePost(id);
             showSuccess('Anuncio eliminado');
         } catch (err) {
-            set({ posts: snapshot });
+            set({ posts: snapshot, myPosts: mySnapshot });
             showError(err.response?.data?.message || 'Error al eliminar anuncio');
         }
     },
@@ -87,6 +114,7 @@ export const usePostStore = create((set, get) => ({
             const { data } = await reactivatePost(id);
             set((state) => ({
                 posts: state.posts.map((p) => (p._id === id ? data.post : p)),
+                myPosts: state.myPosts.map((p) => (p._id === id ? data.post : p)),
             }));
             showSuccess('Anuncio reactivado');
         } catch (err) {

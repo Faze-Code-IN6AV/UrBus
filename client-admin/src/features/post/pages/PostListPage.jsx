@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useAuthStore } from '../../auth/store/authStore.js';
-import { usePostStore } from '../store/postStore.js';
+import { useState } from 'react';
+import { usePosts } from '../hooks/usePosts.js';
 import { PostCard } from '../components/PostCard.jsx';
 import { PostModal } from '../components/PostModal.jsx';
 import { DeletePostModal } from '../components/DeletePostModal.jsx';
@@ -55,26 +54,27 @@ function EmptyState({ onRefetch }) {
 }
 
 export const PostListPage = () => {
-    const user = useAuthStore((s) => s.user);
-    const isAdmin = user?.role === 'ADMIN_ROLE';
-
-    const postsState = usePostStore((s) => s.posts);
-    const posts = Array.isArray(postsState) ? postsState : [];
-    const loading = usePostStore((s) => s.loading);
-    const error = usePostStore((s) => s.error);
-    const fetchPosts = usePostStore((s) => s.fetchPosts);
-    const restorePost = usePostStore((s) => s.restorePost);
+    const {
+        posts,
+        allPosts,
+        loading,
+        error,
+        isAdmin,
+        isDriver,
+        refetch,
+        restorePost,
+    } = usePosts();
 
     const [modal, setModal] = useState(null);
     const [showDeleted, setShowDeleted] = useState(false);
 
-    useEffect(() => { fetchPosts(); }, [fetchPosts]);
-
     const visiblePosts = isAdmin && showDeleted
-        ? posts
+        ? allPosts
         : posts.filter((p) => !p.isDeleted);
 
     const activeCount = posts.filter((p) => !p.isDeleted).length;
+
+    const canCreate = isAdmin || isDriver;
 
     return (
         <div style={{
@@ -93,7 +93,7 @@ export const PostListPage = () => {
                         margin: 0, fontSize: 22, fontWeight: 800,
                         color: '#111827', letterSpacing: '-0.3px',
                     }}>
-                        Anuncios del Bus
+                        {isDriver ? 'Mis Anuncios' : 'Anuncios del Bus'}
                     </h1>
                     <p style={{ margin: '3px 0 0', fontSize: 13, color: '#9ca3af' }}>
                         {loading
@@ -125,7 +125,7 @@ export const PostListPage = () => {
                         </button>
                     )}
                     <button
-                        onClick={fetchPosts}
+                        onClick={refetch}
                         disabled={loading}
                         style={{
                             display: 'flex', alignItems: 'center', gap: 6,
@@ -141,7 +141,7 @@ export const PostListPage = () => {
                         </svg>
                         Actualizar
                     </button>
-                    {isAdmin && (
+                    {canCreate && (
                         <button
                             onClick={() => setModal('create')}
                             style={{
@@ -177,7 +177,7 @@ export const PostListPage = () => {
                         ))}
                     </>
                 ) : error || visiblePosts.length === 0 ? (
-                    <EmptyState onRefetch={fetchPosts} />
+                    <EmptyState onRefetch={refetch} />
                 ) : (
                     visiblePosts.map((post, i) => (
                         <div key={post._id}>
