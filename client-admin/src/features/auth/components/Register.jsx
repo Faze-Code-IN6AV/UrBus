@@ -1,8 +1,8 @@
-/*import { useState } from "react";
+import { useState } from "react";
 import urbuLogo from "../../../assets/img/UrBus-logo.png";
 import { Spinner } from "./Spinner.jsx";
-import { useAuthStore } from "../store/authStore.js";
-import { showError, showSuccess } from "../../../shared/utils/toast.js";
+// import { useAuthStore } from "../store/authStore.js";
+// import { showError, showSuccess } from "../../../shared/utils/toast.js";
  
 function InputField({ type = "text", placeholder, value, onChange, icon }) {
     return (
@@ -53,51 +53,51 @@ export const Register = ({ onNavigate }) => {
     const [password, setPassword] = useState("");
     const [confirmar, setConfirmar] = useState("");
     const [foto, setFoto] = useState(null);
-    const [fotoFile, setFotoFile] = useState(null);
+    // const [fotoFile, setFotoFile] = useState(null);
  
-    const { register, loading } = useAuthStore();
+    // const { register, loading } = useAuthStore();
  
-    const handleRegister = async () => {
-        if (!nombre.trim() || !apellido.trim() || !username.trim() || !email.trim() || !telefono.trim() || !password.trim()) {
-            showError("Por favor completa todos los campos.");
-            return;
-        }
-        if (password !== confirmar) {
-            showError("Las contraseñas no coinciden.");
-            return;
-        }
-        if (telefono.length !== 8) {
-            showError("El teléfono debe tener 8 dígitos.");
-            return;
-        }
+    // const handleRegister = async () => {
+    //     if (!nombre.trim() || !apellido.trim() || !username.trim() || !email.trim() || !telefono.trim() || !password.trim()) {
+    //         showError("Por favor completa todos los campos.");
+    //         return;
+    //     }
+    //     if (password !== confirmar) {
+    //         showError("Las contraseñas no coinciden.");
+    //         return;
+    //     }
+    //     if (telefono.length !== 8) {
+    //         showError("El teléfono debe tener 8 dígitos.");
+    //         return;
+    //     }
  
-        const formData = new FormData();
-        formData.append("Name", nombre);
-        formData.append("Surname", apellido);
-        formData.append("Username", username);
-        formData.append("Email", email);
-        formData.append("Phone", telefono);
-        formData.append("Password", password);
-        if (fotoFile) {
-            formData.append("ProfilePicture", fotoFile);
-        }
+    //     const formData = new FormData();
+    //     formData.append("Name", nombre);
+    //     formData.append("Surname", apellido);
+    //     formData.append("Username", username);
+    //     formData.append("Email", email);
+    //     formData.append("Phone", telefono);
+    //     formData.append("Password", password);
+    //     if (fotoFile) {
+    //         formData.append("ProfilePicture", fotoFile);
+    //     }
  
-        const result = await register(formData);
+    //     const result = await register(formData);
  
-        if (result.success) {
-            showSuccess("¡Registro exitoso! Revisa tu correo para verificar tu cuenta.");
-            onNavigate("resend");
-        } else {
-            showError(result.error || "Error al registrar usuario");
-        }
-    };
+    //     if (result.success) {
+    //         showSuccess("¡Registro exitoso! Revisa tu correo para verificar tu cuenta.");
+    //         onNavigate("resend");
+    //     } else {
+    //         showError(result.error || "Error al registrar usuario");
+    //     }
+    // };
  
     const handleFotoChange = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const url = URL.createObjectURL(file);
         setFoto(url);
-        setFotoFile(file);
+        // setFotoFile(file);
     };
  
     return (
@@ -149,12 +149,12 @@ export const Register = ({ onNavigate }) => {
         </div>
  
         <button
-            onClick={handleRegister}
-            disabled={loading}
+            // onClick={handleRegister}
+            // disabled={loading}
             className="w-full py-3.5 rounded-2xl font-semibold text-white text-base shadow-md mt-4 flex items-center justify-center gap-2 active:scale-95 transition-transform"
             style={{ background: "linear-gradient(135deg,#f5c518 0%,#e6a800 100%)" }}
         >
-            {loading ? <Spinner size={20} color="#fff" /> : "Registrarse"}
+            Registrarse
         </button>
  
         <p className="text-center text-sm text-gray-500 mt-2">
@@ -166,4 +166,3 @@ export const Register = ({ onNavigate }) => {
         </>
     );
 }
-    */

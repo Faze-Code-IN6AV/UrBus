@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { LoginForm } from "../components/LoginForm.jsx";
-//import { Register } from "../components/Register.jsx";
-//import { ForgotPassword } from "../components/ForgotPassword.jsx";
-//import { ResendVerification } from "../components/ResendVerification.jsx";
+import { Register } from "../components/Register.jsx";
+import { ForgotPassword } from "../components/ForgotPassword.jsx";
+import { ResendVerification } from "../components/ResendVerification.jsx";
 
 function CloudBackground() {
     return (
@@ -33,9 +33,9 @@ export const AuthPage = () => {
 
     const views = {
         login: <LoginForm onNavigate={setView} />,
-        //register: <Register onNavigate={setView} />,
-        //forgot: <ForgotPassword onNavigate={setView} />,
-        //resend: <ResendVerification onNavigate={setView} />,
+        register: <Register onNavigate={setView} />,
+        forgot: <ForgotPassword onNavigate={setView} />,
+        resend: <ResendVerification onNavigate={setView} />,
     };
 
     return (
