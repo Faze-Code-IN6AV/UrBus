@@ -1,87 +1,49 @@
-/*import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { verifyEmail as verifyEmailRequest } from '../../../shared/api';
 import { showError, showSuccess } from '../../../shared/utils/toast.js';
- 
+
 export const useVerifyEmail = (token, onFinish) => {
- 
     const [status, setStatus] = useState('loading');
     const [message, setMessage] = useState('');
- 
+
     // Evita doble ejecución en StrictMode
     const hasVerified = useRef(false);
- 
+
     useEffect(() => {
- 
         const run = async () => {
- 
-            // Evita doble request
             if (hasVerified.current) return;
- 
             hasVerified.current = true;
- 
-            // Validar token
+
             if (!token) {
                 setStatus('error');
                 setMessage('Token inválido.');
                 showError('Token inválido.');
- 
-                if (onFinish) {
-                    onFinish();
-                }
- 
+                if (onFinish) onFinish();
                 return;
             }
- 
+
             try {
- 
                 const response = await verifyEmailRequest(token);
- 
                 if (response.status === 200) {
- 
                     setStatus('success');
- 
-                    setMessage(
-                        'Tu correo ha sido verificado correctamente.'
-                    );
- 
+                    setMessage('Tu correo ha sido verificado correctamente.');
                     showSuccess('¡Correo verificado correctamente!');
- 
                 } else {
- 
                     setStatus('error');
- 
-                    setMessage(
-                        'El enlace ha expirado o no es válido.'
-                    );
- 
+                    setMessage('El enlace ha expirado o no es válido.');
                     showError('El enlace ha expirado o no es válido.');
                 }
- 
             } catch (error) {
- 
                 setStatus('error');
- 
-                setMessage(
-                    'El enlace ha expirado o no es válido.'
-                );
- 
+                setMessage('El enlace ha expirado o no es válido.');
                 showError('El enlace ha expirado o no es válido.');
- 
             } finally {
- 
-                if (onFinish) {
-                    onFinish();
-                }
+                if (onFinish) onFinish();
             }
         };
- 
+
         run();
- 
     }, [token, onFinish]);
- 
-    return {
-        status,
-        message
-    };
+
+    return { status, message };
 };
-*/
