@@ -17,50 +17,12 @@ export const useAuthStore = create(
         isLoadingAuth: true,
         isAuthenticated: false,
 
-        // Verifica si hay sesión activa con un rol válido
         checkAuth: () => {
             const token = get().token;
             const role = get().user?.role;
             const hasValidRole = ALLOWED_ROLES.includes(role);
 
             if (token && !hasValidRole) {
-            set({
-                user: null,
-                token: null,
-                refreshToken: null,
-                expiresAt: null,
-                isAuthenticated: false,
-                isLoadingAuth: false,
-                error: 'No tienes permisos para acceder a esta aplicación',
-            });
-            return;
-            }
-
-            set({
-            isLoadingAuth: false,
-            isAuthenticated: Boolean(token) && hasValidRole,
-            });
-        },
-
-        logout: () => {
-            set({
-            user: null,
-            token: null,
-            refreshToken: null,
-            expiresAt: null,
-            isAuthenticated: false,
-            });
-        },
-
-        login: async ({ emailOrUsername, password }) => {
-            try {
-            set({ loading: true, error: null });
-            const { data } = await loginRequest({ emailOrUsername, password });
-            const role = data?.userDetails?.role;
-
-            if (!ALLOWED_ROLES.includes(role)) {
-                const message = 'No tienes permisos para acceder a esta aplicación';
-                
                 set({
                     user: null,
                     token: null,
@@ -68,26 +30,65 @@ export const useAuthStore = create(
                     expiresAt: null,
                     isAuthenticated: false,
                     isLoadingAuth: false,
-                    error: message,
                     loading: false,
+                    error: 'No tienes permisos para acceder a esta aplicación',
                 });
-
-                showError(message);
-                return { success: false, error: message };
+                return;
             }
 
             set({
-                user: data.userDetails,
-                token: data.token,
-                refreshToken: data.refreshToken,
-                expiresAt: data.expiresAt,
-                isAuthenticated: true,
                 isLoadingAuth: false,
                 loading: false,
-                error: null,
+                isAuthenticated: Boolean(token) && hasValidRole,
             });
+        },
 
-            return { success: true, role };
+        logout: () => {
+            set({
+                user: null,
+                token: null,
+                refreshToken: null,
+                expiresAt: null,
+                isAuthenticated: false,
+                isLoadingAuth: false,
+                loading: false,
+            });
+        },
+
+        login: async ({ emailOrUsername, password }) => {
+            try {
+                set({ loading: true, error: null });
+                const { data } = await loginRequest({ emailOrUsername, password });
+                const role = data?.userDetails?.role;
+
+                if (!ALLOWED_ROLES.includes(role)) {
+                    const message = 'No tienes permisos para acceder a esta aplicación';
+                    set({
+                        user: null,
+                        token: null,
+                        refreshToken: null,
+                        expiresAt: null,
+                        isAuthenticated: false,
+                        isLoadingAuth: false,
+                        error: message,
+                        loading: false,
+                    });
+                    showError(message);
+                    return { success: false, error: message };
+                }
+
+                set({
+                    user: data.userDetails,
+                    token: data.token,
+                    refreshToken: data.refreshToken,
+                    expiresAt: data.expiresAt,
+                    isAuthenticated: true,
+                    isLoadingAuth: false,
+                    loading: false,
+                    error: null,
+                });
+
+                return { success: true, role };
             } catch (err) {
                 const message = err.response?.data?.message || 'Error al iniciar sesión';
                 set({ error: message, loading: false });
@@ -97,18 +98,18 @@ export const useAuthStore = create(
 
         register: async (formData) => {
             try {
-            set({ loading: true, error: null });
-            const { data } = await registerRequest(formData);
-            set({ loading: false });
-            return {
-                success: true,
-                emailVerificationRequired: data?.emailVerificationRequired ?? true,
-                data,
-            };
+                set({ loading: true, error: null });
+                const { data } = await registerRequest(formData);
+                set({ loading: false });
+                return {
+                    success: true,
+                    emailVerificationRequired: data?.emailVerificationRequired ?? true,
+                    data,
+                };
             } catch (err) {
-            const message = err.response?.data?.message || 'Error al registrar usuario';
-            set({ error: message, loading: false });
-            return { success: false, error: message };
+                const message = err.response?.data?.message || 'Error al registrar usuario';
+                set({ error: message, loading: false });
+                return { success: false, error: message };
             }
         },
         }),

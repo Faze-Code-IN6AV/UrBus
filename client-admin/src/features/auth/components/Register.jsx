@@ -1,9 +1,9 @@
 import { useState } from "react";
 import urbuLogo from "../../../assets/img/UrBus-logo.png";
 import { Spinner } from "./Spinner.jsx";
-// import { useAuthStore } from "../store/authStore.js";
-// import { showError, showSuccess } from "../../../shared/utils/toast.js";
- 
+import { useAuthStore } from "../store/authStore.js";
+import { showError, showSuccess } from "../../../shared/utils/toast.js";
+
 function InputField({ type = "text", placeholder, value, onChange, icon }) {
     return (
         <div className="flex items-center bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 gap-3">
@@ -18,7 +18,7 @@ function InputField({ type = "text", placeholder, value, onChange, icon }) {
         </div>
     );
 }
- 
+
 const UserIcon = () => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
         <circle cx="12" cy="8" r="4" stroke="#9ca3af" strokeWidth="2" />
@@ -43,7 +43,7 @@ const LockIcon = () => (
         <path d="M8 11V7a4 4 0 018 0v4" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" />
     </svg>
 );
- 
+
 export const Register = ({ onNavigate }) => {
     const [nombre, setNombre] = useState("");
     const [apellido, setApellido] = useState("");
@@ -53,57 +53,57 @@ export const Register = ({ onNavigate }) => {
     const [password, setPassword] = useState("");
     const [confirmar, setConfirmar] = useState("");
     const [foto, setFoto] = useState(null);
-    // const [fotoFile, setFotoFile] = useState(null);
- 
-    // const { register, loading } = useAuthStore();
- 
-    // const handleRegister = async () => {
-    //     if (!nombre.trim() || !apellido.trim() || !username.trim() || !email.trim() || !telefono.trim() || !password.trim()) {
-    //         showError("Por favor completa todos los campos.");
-    //         return;
-    //     }
-    //     if (password !== confirmar) {
-    //         showError("Las contraseñas no coinciden.");
-    //         return;
-    //     }
-    //     if (telefono.length !== 8) {
-    //         showError("El teléfono debe tener 8 dígitos.");
-    //         return;
-    //     }
- 
-    //     const formData = new FormData();
-    //     formData.append("Name", nombre);
-    //     formData.append("Surname", apellido);
-    //     formData.append("Username", username);
-    //     formData.append("Email", email);
-    //     formData.append("Phone", telefono);
-    //     formData.append("Password", password);
-    //     if (fotoFile) {
-    //         formData.append("ProfilePicture", fotoFile);
-    //     }
- 
-    //     const result = await register(formData);
- 
-    //     if (result.success) {
-    //         showSuccess("¡Registro exitoso! Revisa tu correo para verificar tu cuenta.");
-    //         onNavigate("resend");
-    //     } else {
-    //         showError(result.error || "Error al registrar usuario");
-    //     }
-    // };
- 
+    const [fotoFile, setFotoFile] = useState(null);
+
+    const { register, loading } = useAuthStore();
+
+    const handleRegister = async () => {
+        if (!nombre.trim() || !apellido.trim() || !username.trim() || !email.trim() || !telefono.trim() || !password.trim()) {
+            showError("Por favor completa todos los campos.");
+            return;
+        }
+        if (password !== confirmar) {
+            showError("Las contraseñas no coinciden.");
+            return;
+        }
+        if (telefono.length !== 8) {
+            showError("El teléfono debe tener 8 dígitos.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("Name", nombre);
+        formData.append("Surname", apellido);
+        formData.append("Username", username);
+        formData.append("Email", email);
+        formData.append("Phone", telefono);
+        formData.append("Password", password);
+        if (fotoFile) {
+            formData.append("ProfilePicture", fotoFile);
+        }
+
+        const result = await register(formData);
+
+        if (result.success) {
+            showSuccess("¡Registro exitoso! Revisa tu correo para verificar tu cuenta.");
+            onNavigate("resend");
+        } else {
+            showError(result.error || "Error al registrar usuario");
+        }
+    };
+
     const handleFotoChange = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const url = URL.createObjectURL(file);
         setFoto(url);
-        // setFotoFile(file);
+        setFotoFile(file);
     };
- 
+
     return (
         <>
         <h1 className="text-2xl font-bold text-gray-800 text-center mb-5">Registro</h1>
- 
+
         <label className="relative cursor-pointer mb-6 group" style={{ width: 120, height: 120 }}>
             <input
             type="file"
@@ -137,7 +137,7 @@ export const Register = ({ onNavigate }) => {
             </svg>
             </div>
         </label>
- 
+
         <div className="flex flex-col gap-3 w-full">
             <InputField placeholder="Nombre" value={nombre} onChange={setNombre} icon={<UserIcon />} />
             <InputField placeholder="Apellido" value={apellido} onChange={setApellido} icon={<UserIcon />} />
@@ -147,16 +147,16 @@ export const Register = ({ onNavigate }) => {
             <InputField type="password" placeholder="Contraseña" value={password} onChange={setPassword} icon={<LockIcon />} />
             <InputField type="password" placeholder="Confirmar contraseña" value={confirmar} onChange={setConfirmar} icon={<LockIcon />} />
         </div>
- 
+
         <button
-            // onClick={handleRegister}
-            // disabled={loading}
+            onClick={handleRegister}
+            disabled={loading}
             className="w-full py-3.5 rounded-2xl font-semibold text-white text-base shadow-md mt-4 flex items-center justify-center gap-2 active:scale-95 transition-transform"
             style={{ background: "linear-gradient(135deg,#f5c518 0%,#e6a800 100%)" }}
         >
-            Registrarse
+            {loading ? <Spinner /> : "Registrarse"}
         </button>
- 
+
         <p className="text-center text-sm text-gray-500 mt-2">
             ¿Ya tienes cuenta?{" "}
             <button onClick={() => onNavigate("login")} className="font-semibold" style={{ color: "#2196F3" }}>
