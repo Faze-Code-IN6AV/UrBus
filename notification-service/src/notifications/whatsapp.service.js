@@ -14,8 +14,8 @@ const createClient = () => {
     puppeteer: {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Windows
-      // executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Mac
+      // executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Windows
+      executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Mac
     }
   });
 
