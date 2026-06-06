@@ -4,6 +4,7 @@ import { Spinner } from "./Spinner.jsx";
 import { useAuthStore } from "../store/authStore.js";
 import { showError } from "../../../shared/utils/toast.js";
 import { useNavigate } from "react-router-dom";
+
  
 function UserIcon() {
     return (
@@ -26,7 +27,7 @@ function LockIcon() {
 export const LoginForm = ({ onNavigate }) => {
     const [usuario, setUsuario] = useState("");
     const [password, setPassword] = useState("");
-    const { login, loading } = useAuthStore();
+    const { login, loading, error } = useAuthStore();
     const navigate = useNavigate();
  
     const handleLogin = async () => {
@@ -83,6 +84,12 @@ export const LoginForm = ({ onNavigate }) => {
             />
             </div>
         </div>
+        
+        {error && (
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#ef4444', textAlign: 'center' }}>
+                {error}
+            </p>
+        )}
  
         <button
             onClick={() => onNavigate("forgot")}

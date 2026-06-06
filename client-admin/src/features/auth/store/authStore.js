@@ -5,6 +5,7 @@ import { showError } from '../../../shared/utils/toast.js';
 
 const ALLOWED_ROLES = ['ADMIN_ROLE', 'USER_ROLE'];
 
+
 export const useAuthStore = create(
     persist(
         (set, get) => ({
@@ -63,35 +64,30 @@ export const useAuthStore = create(
 
                 if (!ALLOWED_ROLES.includes(role)) {
                     const message = 'No tienes permisos para acceder a esta aplicación';
-                    set({
-                        user: null,
-                        token: null,
-                        refreshToken: null,
-                        expiresAt: null,
-                        isAuthenticated: false,
-                        isLoadingAuth: false,
-                        error: message,
-                        loading: false,
-                    });
+                    set({ user: null, token: null, refreshToken: null, expiresAt: null,
+                        isAuthenticated: false, isLoadingAuth: false, error: message, loading: false });
                     showError(message);
                     return { success: false, error: message };
                 }
 
-                set({
-                    user: data.userDetails,
-                    token: data.token,
-                    refreshToken: data.refreshToken,
-                    expiresAt: data.expiresAt,
-                    isAuthenticated: true,
-                    isLoadingAuth: false,
-                    loading: false,
-                    error: null,
-                });
-
+                set({ user: data.userDetails, token: data.token, refreshToken: data.refreshToken,
+                    expiresAt: data.expiresAt, isAuthenticated: true, isLoadingAuth: false,
+                    loading: false, error: null });
                 return { success: true, role };
             } catch (err) {
-                const message = err.response?.data?.message || 'Error al iniciar sesión';
+                const status = err.response?.status;
+                const serverMsg = err.response?.data?.message;
+
+                const message =
+                    status === 401 ? 'Correo/usuario o contraseña incorrectos.' :
+                    status === 403 ? 'Tu cuenta no tiene permiso para ingresar.' :
+                    status === 404 ? 'El usuario no existe.' :
+                    status === 423 ? 'Tu cuenta está bloqueada. Contacta al administrador.' :
+                    status === 429 ? 'Demasiados intentos. Espera unos minutos.' :
+                    serverMsg || 'Error al iniciar sesión. Intenta de nuevo.';
+
                 set({ error: message, loading: false });
+                showError(message);
                 return { success: false, error: message };
             }
         },
