@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   createPassenger,
   getPassengers,
+  getMyPassenger,
   updatePassengerStatus,
   deletePassenger
 } from './passenger.controller.js';
@@ -21,6 +22,12 @@ router.get(
   '/',
   validateJWT,
   getPassengers
+);
+
+router.get(
+  '/me',
+  validateJWT,
+  getMyPassenger
 );
 
 router.patch(

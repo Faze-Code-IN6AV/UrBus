@@ -3,21 +3,35 @@ import Passenger from './passenger.model.js';
 export const createPassenger = async (req, res, next) => {
   try {
 
-    if (req.user.role !== 'ADMIN_ROLE') {
+    if (req.user.role !== 'ADMIN_ROLE' && req.user.role !== 'DRIVER_ROLE') {
       return res.status(403).json({
         success: false,
         message: 'No tiene permisos para crear pasajeros'
       });
     }
 
-    const passenger = await Passenger.create({
-      name: req.body.name,
-      userId: req.user.id
-    });
+    const { name, userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'El userId de la cuenta es obligatorio'
+      });
+    }
+
+    const existing = await Passenger.findOne({ userId, isActive: true });
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe un pasajero vinculado a esa cuenta'
+      });
+    }
+
+    const passenger = await Passenger.create({ name, userId });
 
     res.status(201).json({
       success: true,
-      message: 'Pasajero creado',
+      message: 'Pasajero creado y vinculado a la cuenta',
       data: passenger
     });
 
@@ -31,7 +45,9 @@ export const getPassengers = async (req, res, next) => {
 
     if (
       req.user.role !== 'ADMIN_ROLE' &&
-      req.user.role !== 'DRIVER_ROLE' 
+      req.user.role !== 'PASSENGER_ROLE' &&
+      req.user.role !== 'USER_ROLE' &&
+      req.user.role !== 'DRIVER_ROLE'
     ) {
       return res.status(403).json({
         success: false,
@@ -51,13 +67,40 @@ export const getPassengers = async (req, res, next) => {
   }
 };
 
+export const getMyPassenger = async (req, res, next) => {
+  try {
 
+    const passenger = await Passenger.findOne({ userId: req.user.id, isActive: true });
+
+    if (!passenger) {
+      return res.status(404).json({
+        success: false,
+        message: 'No tienes un perfil de pasajero vinculado'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: passenger
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
 
 export const updatePassengerStatus = async (req, res, next) => {
   try {
 
     const { id } = req.params;
-    const { status } = req.body;
+    const status = req.body.status ?? req.body.data;
+
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: 'El estado es obligatorio'
+      });
+    }
 
     const passenger = await Passenger.findById(id);
 
@@ -69,7 +112,7 @@ export const updatePassengerStatus = async (req, res, next) => {
     }
 
     if (
-      req.user.role === 'PASSENGER_ROLE' &&
+      (req.user.role === 'PASSENGER_ROLE' || req.user.role === 'USER_ROLE') &&
       passenger.userId !== req.user.id
     ) {
       return res.status(403).json({
@@ -79,7 +122,6 @@ export const updatePassengerStatus = async (req, res, next) => {
     }
 
     passenger.status = status;
-
     await passenger.save();
 
     res.status(200).json({
@@ -92,7 +134,6 @@ export const updatePassengerStatus = async (req, res, next) => {
     next(err);
   }
 };
-
 
 export const deletePassenger = async (req, res, next) => {
   try {

@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { login as loginRequest, register as registerRequest } from '../../../shared/api';
 import { showError } from '../../../shared/utils/toast.js';
 
-const ALLOWED_ROLES = ['ADMIN_ROLE', 'USER_ROLE'];
+const ALLOWED_ROLES = ['ADMIN_ROLE', 'USER_ROLE', 'PASSENGER_ROLE'];
 
 
 export const useAuthStore = create(

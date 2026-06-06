@@ -15,13 +15,15 @@ export const validateJWT = (req, res, next) => {
         const token = authHeader.split(' ')[1];
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const rawRole =
+            decoded.role ||
+            decoded.roles ||
+            decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+        const role = Array.isArray(rawRole) ? rawRole[0] : rawRole;
 
         req.user = {
             id: decoded.sub,
-            role:
-                decoded.role ||
-                decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
-                'USER_ROLE'
+            role: role || 'USER_ROLE'
         };
 
         next();

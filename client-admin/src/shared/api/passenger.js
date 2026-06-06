@@ -22,7 +22,7 @@ export const createPassenger = (data) =>
 
 // PATCH /api/v1/passengers/:id/status  — ADMIN, DRIVER o propio PASSENGER
 export const updatePassengerStatus = (id, data) =>
-    axiosPassenger.patch(`/passengers/${id}/status`, { data });
+    axiosPassenger.patch(`/passengers/${id}/status`, { status: data });
 
 // DELETE /api/v1/passengers/:id  — requiere ADMIN_ROLE
 export const deletePassenger = (id) =>
