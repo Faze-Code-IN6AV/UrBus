@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../../features/auth/store/authStore.js';
 
 const axiosNotification = axios.create({
-  baseURL: import.meta.env.VITE_NOTIFICATION_URL || 'http://localhost:5000/urbus/v1',
+  baseURL: import.meta.env.VITE_NOTIFICATION_URL,
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });

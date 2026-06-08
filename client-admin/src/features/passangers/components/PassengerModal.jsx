@@ -11,17 +11,16 @@ const INPUT_STYLE = {
 export const PassengerModal = ({ passenger = null, onClose }) => {
     const isEdit = Boolean(passenger);
 
-    const addPassenger    = usePassengerStore((s) => s.addPassenger);
-    const editPassenger   = usePassengerStore((s) => s.editPassenger);
-    const loading         = usePassengerStore((s) => s.loading);
+    const addPassenger  = usePassengerStore((s) => s.addPassenger);
+    const editPassenger = usePassengerStore((s) => s.editPassenger);
+    const loading       = usePassengerStore((s) => s.loading);
 
-    const [name, setName]   = useState(passenger?.name ?? '');
-    const [error, setError] = useState('');
-    const inputRef          = useRef(null);
+    const [name,   setName]   = useState(passenger?.name   ?? '');
+    const [userId, setUserId] = useState(passenger?.userId ?? '');
+    const [errors, setErrors] = useState({});
+    const inputRef = useRef(null);
 
-    useEffect(() => {
-        setTimeout(() => inputRef.current?.focus(), 50);
-    }, []);
+    useEffect(() => { setTimeout(() => inputRef.current?.focus(), 50); }, []);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -29,13 +28,21 @@ export const PassengerModal = ({ passenger = null, onClose }) => {
         return () => window.removeEventListener('keydown', handler);
     }, [onClose]);
 
+    const validate = () => {
+        const e = {};
+        if (!name.trim())       e.name   = 'El nombre es obligatorio';
+        else if (name.trim().length < 3) e.name = 'Mínimo 3 caracteres';
+        if (!isEdit && !userId.trim()) e.userId = 'El ID de cuenta es obligatorio';
+        return e;
+    };
+
     const handleSubmit = async () => {
-        if (!name.trim()) { setError('El nombre es obligatorio'); return; }
-        if (name.trim().length < 3) { setError('Mínimo 3 caracteres'); return; }
+        const e = validate();
+        if (Object.keys(e).length) { setErrors(e); return; }
 
         const result = isEdit
             ? await editPassenger(passenger._id, { name: name.trim() })
-            : await addPassenger({ name: name.trim() });
+            : await addPassenger({ name: name.trim(), userId: userId.trim() });
 
         if (result?.success !== false) onClose();
     };
@@ -53,6 +60,7 @@ export const PassengerModal = ({ passenger = null, onClose }) => {
                 background: '#fff', borderRadius: 20, width: '100%', maxWidth: 400,
                 boxShadow: '0 20px 60px rgba(0,0,0,0.18)', overflow: 'hidden',
             }}>
+                {/* Header */}
                 <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '20px 24px 16px', borderBottom: '1px solid #f3f4f6',
@@ -70,7 +78,7 @@ export const PassengerModal = ({ passenger = null, onClose }) => {
                             </svg>
                         </div>
                         <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: '#111827' }}>
-                            {isEdit ? 'Editar pasajero' : 'Nuevo pasajero'}
+                            {isEdit ? 'Editar pasajero' : 'Vincular pasajero a cuenta'}
                         </p>
                     </div>
                     <button
@@ -83,20 +91,44 @@ export const PassengerModal = ({ passenger = null, onClose }) => {
                     </button>
                 </div>
 
-                <div style={{ padding: '20px 24px' }}>
-                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-                        Nombre completo
-                    </label>
-                    <input
-                        ref={inputRef}
-                        value={name}
-                        onChange={(e) => { setName(e.target.value); setError(''); }}
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
-                        placeholder="Ej. María García"
-                        style={{ ...INPUT_STYLE, borderColor: error ? '#ef4444' : '#e5e7eb' }}
-                    />
-                    {error && (
-                        <p style={{ margin: '6px 0 0', fontSize: 12, color: '#ef4444' }}>{error}</p>
+                {/* Body */}
+                <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div>
+                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                            Nombre completo
+                        </label>
+                        <input
+                            ref={inputRef}
+                            value={name}
+                            onChange={(e) => { setName(e.target.value); setErrors((p) => ({ ...p, name: '' })); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+                            placeholder="Ej. María García"
+                            style={{ ...INPUT_STYLE, borderColor: errors.name ? '#ef4444' : '#e5e7eb' }}
+                        />
+                        {errors.name && (
+                            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#ef4444' }}>{errors.name}</p>
+                        )}
+                    </div>
+
+                    {!isEdit && (
+                        <div>
+                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+                                ID de cuenta (userId)
+                            </label>
+                            <input
+                                value={userId}
+                                onChange={(e) => { setUserId(e.target.value); setErrors((p) => ({ ...p, userId: '' })); }}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+                                placeholder="ID del usuario en el sistema de auth"
+                                style={{ ...INPUT_STYLE, borderColor: errors.userId ? '#ef4444' : '#e5e7eb' }}
+                            />
+                            {errors.userId && (
+                                <p style={{ margin: '6px 0 0', fontSize: 12, color: '#ef4444' }}>{errors.userId}</p>
+                            )}
+                            <p style={{ margin: '6px 0 0', fontSize: 11.5, color: '#9ca3af' }}>
+                                Este ID vincula al pasajero con su cuenta de acceso al sistema.
+                            </p>
+                        </div>
                     )}
                 </div>
 
@@ -128,7 +160,7 @@ export const PassengerModal = ({ passenger = null, onClose }) => {
                                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
                             </svg>
                         )}
-                        {isEdit ? 'Guardar cambios' : 'Crear pasajero'}
+                        {isEdit ? 'Guardar cambios' : 'Vincular pasajero'}
                     </button>
                 </div>
             </div>

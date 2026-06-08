@@ -29,16 +29,19 @@ function PassengerAvatar({ name }) {
     );
 }
 
-function Checkbox({ checked, onChange }) {
+function Checkbox({ checked, onChange, title, disabled }) {
     return (
         <div
-            onClick={onChange}
+            onClick={disabled ? undefined : onChange}
+            title={title}
             style={{
                 width: 26, height: 26, borderRadius: 6,
                 border: checked ? 'none' : '2px solid #d1d5db',
                 background: checked ? '#4ade80' : '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', flexShrink: 0,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.65 : 1,
+                flexShrink: 0,
                 transition: 'all 0.15s',
                 boxShadow: checked ? '0 2px 6px rgba(74,222,128,0.35)' : 'none',
             }}
@@ -75,6 +78,8 @@ function IconBtn({ onClick, title, color, children }) {
 export const PassengerCard = ({ passenger, onEdit, onDelete }) => {
     const user    = useAuthStore((s) => s.user);
     const isAdmin = user?.role === 'ADMIN_ROLE';
+    const userId  = user?.id || user?._id;
+    const canToggleStatus = isAdmin || user?.role === 'DRIVER_ROLE' || String(passenger.userId) === String(userId);
 
     const toggleStatus = usePassengerStore((s) => s.toggleStatus);
     const { _id, name, status, address } = passenger;
@@ -106,7 +111,9 @@ export const PassengerCard = ({ passenger, onEdit, onDelete }) => {
 
             <Checkbox
                 checked={isPresent}
-                onChange={() => toggleStatus(_id)}
+                onChange={canToggleStatus ? () => toggleStatus(_id) : undefined}
+                title={canToggleStatus ? (isPresent ? 'Marcar como ausente' : 'Marcar como presente') : 'Solo puedes marcar tu propia asistencia'}
+                disabled={!canToggleStatus}
             />
 
             {isAdmin && (
