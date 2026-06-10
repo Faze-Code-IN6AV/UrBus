@@ -238,9 +238,17 @@ public class AuthService(
         return new UserDetailsDto
         {
             Id = user.Id,
+            Name = user.Name,
+            Surname = user.Surname,
             Username = user.Username,
+            Email = user.Email,
             ProfilePicture = _cloudinaryService.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
-            Role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE
+            Phone = user.UserProfile?.Phone ?? string.Empty,
+            Role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE,
+            Status = user.Status,
+            IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
         };
     }
 
@@ -434,4 +442,3 @@ public class AuthService(
         return MapToUserResponseDto(user);
     }
 }
-

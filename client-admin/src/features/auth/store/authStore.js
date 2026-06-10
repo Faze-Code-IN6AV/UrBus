@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { login as loginRequest, register as registerRequest } from '../../../shared/api';
+import { updateProfile as updateProfileRequest } from '../../../shared/api/profile.js';
 import { showError } from '../../../shared/utils/toast.js';
 
 const ALLOWED_ROLES = ['ADMIN_ROLE', 'USER_ROLE', 'PASSENGER_ROLE'];
-
 
 export const useAuthStore = create(
     persist(
@@ -17,6 +17,8 @@ export const useAuthStore = create(
         error: null,
         isLoadingAuth: true,
         isAuthenticated: false,
+
+        setUser: (updatedUser) => set({ user: updatedUser }),
 
         checkAuth: () => {
             const token = get().token;
@@ -105,6 +107,35 @@ export const useAuthStore = create(
             } catch (err) {
                 const message = err.response?.data?.message || 'Error al registrar usuario';
                 set({ error: message, loading: false });
+                return { success: false, error: message };
+            }
+        },
+
+        updateProfile: async (userId, formData) => {
+            try {
+                set({ loading: true, error: null });
+                const { data } = await updateProfileRequest(userId, formData);
+
+                // FIX: Merge completo con el usuario actual para no perder campos
+                // que el servidor no retorna (token, etc.) y actualizar todos los
+                // campos que el servidor sí retorna (name, surname, phone, profilePicture, role)
+                const currentUser = get().user;
+                const updatedUser = {
+                    ...currentUser,
+                    name: data.name ?? currentUser?.name,
+                    surname: data.surname ?? currentUser?.surname,
+                    phone: data.phone ?? currentUser?.phone,
+                    profilePicture: data.profilePicture ?? currentUser?.profilePicture,
+                    role: data.role ?? currentUser?.role,
+                    updatedAt: data.updatedAt ?? currentUser?.updatedAt,
+                };
+
+                set({ user: updatedUser, loading: false, error: null });
+                return { success: true, data: updatedUser };
+            } catch (err) {
+                const message = err.response?.data?.message || 'Error al actualizar el perfil';
+                set({ error: message, loading: false });
+                showError(message);
                 return { success: false, error: message };
             }
         },

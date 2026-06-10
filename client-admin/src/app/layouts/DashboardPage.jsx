@@ -3,6 +3,25 @@ import { Outlet, useNavigate, useLocation, NavLink } from "react-router-dom";
 import { useAuthStore } from "../../features/auth/store/authStore.js";
 import { styles } from "../../styles/dashboard.js";
 import { WhatsAppBubble } from "../../features/whatsapp/components/WhatsAppBubble.jsx";
+import { ProfileModal } from "../../features/auth/components/ProfileModal.jsx";
+import userDefault from "../../assets/img/user.png";
+
+const authBaseUrl = import.meta.env.VITE_AUTH_URL?.replace(/\/api\/v1\/?$/, '');
+
+const normalizeCloudinaryUrl = (url) => {
+  if (!url) return url;
+  return url.replace(/(\/v\d+)(?!\/)/, '$1/');
+};
+
+const normalizeProfilePicture = (url) => {
+  if (!url) return null;
+  if (/^(https?:)?\/\//.test(url)) {
+    const resolved = url.startsWith('//') ? `https:${url}` : url;
+    return normalizeCloudinaryUrl(resolved);
+  }
+  if (url.startsWith('/')) return normalizeCloudinaryUrl(`${authBaseUrl}${url}`);
+  return normalizeCloudinaryUrl(`${authBaseUrl}/${url}`);
+};
 
 const NAV_ITEMS = [
   {
@@ -46,6 +65,7 @@ export const DashboardPage = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [profileOpen, setProfileOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
@@ -60,14 +80,12 @@ export const DashboardPage = () => {
     navigate("/");
   };
 
-  // Inicial del usuario para el avatar
   const avatarLetter = user?.name
     ? user.name.charAt(0).toUpperCase()
     : user?.role === "ADMIN_ROLE"
     ? "A"
     : "U";
 
-  // Título de la página actual
   const currentPage = NAV_ITEMS.find((item) =>
     location.pathname === item.path || location.pathname.startsWith(item.path + "/")
   );
@@ -75,7 +93,25 @@ export const DashboardPage = () => {
 
   return (
     <div style={styles.root}>
-      {/* Overlay móvil */}
+      <style>{`
+        .profile-trigger { cursor: pointer; transition: opacity 0.15s; }
+        .profile-trigger:hover { opacity: 0.8; }
+        .sidebar-profile-trigger {
+          cursor: pointer;
+          transition: background 0.15s;
+          border-radius: 10px;
+          padding: 2px 4px;
+        }
+        .sidebar-profile-trigger:hover { background: rgba(255,255,255,0.07); }
+        .header-user-btn {
+          display: flex; align-items: center; gap: 8px;
+          background: transparent; border: none; cursor: pointer;
+          padding: 4px 8px; border-radius: 8px;
+          transition: background 0.15s;
+        }
+        .header-user-btn:hover { background: #f3f4f6; }
+      `}</style>
+
       {isMobile && sidebarOpen && (
         <div style={styles.overlay} onClick={() => setSidebarOpen(false)} />
       )}
@@ -97,13 +133,11 @@ export const DashboardPage = () => {
             : {}),
         }}
       >
-        {/* Logo */}
         <div style={styles.logoArea}>
           <div style={styles.logoBadge}>U</div>
           <span style={styles.logoText}>UrBus</span>
         </div>
 
-        {/* Navegación */}
         <nav style={styles.nav}>
           <p style={styles.navGroup}>Principal</p>
           {NAV_ITEMS.map((item) => {
@@ -148,15 +182,35 @@ export const DashboardPage = () => {
           })}
         </nav>
 
-        {/* Info del usuario en el sidebar */}
-        <div style={styles.sidebarUser}>
-          <div style={styles.sidebarAvatar}>{avatarLetter}</div>
+        {/* Usuario en sidebar — clickeable para abrir perfil */}
+        <div
+          className="sidebar-profile-trigger"
+          style={styles.sidebarUser}
+          onClick={() => setProfileOpen(true)}
+          title="Ver mi perfil"
+        >
+          <img
+            src={normalizeProfilePicture(user?.profilePicture) || userDefault}
+            alt="Avatar"
+            style={{ ...styles.sidebarAvatar, objectFit: 'cover' }}
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = userDefault; }}
+          />
           <div style={styles.sidebarUserInfo}>
             <p style={styles.sidebarUserName}>{user?.name ?? "Usuario"}</p>
             <p style={styles.sidebarUserRole}>
-              {user?.role === "ADMIN_ROLE" ? "Administrador" : "Pasajero"}
+              {user?.role === "ADMIN_ROLE"
+                ? "Administrador"
+                : user?.role === "PASSENGER_ROLE"
+                ? "Pasajero"
+                : "Usuario"}
             </p>
           </div>
+          <svg
+            width="12" height="12" fill="none" stroke="rgba(255,255,255,0.35)"
+            strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}
+          >
+            <polyline points="9,18 15,12 9,6" />
+          </svg>
         </div>
       </aside>
 
@@ -175,8 +229,27 @@ export const DashboardPage = () => {
             )}
             <span style={styles.pageTitle}>{pageTitle}</span>
           </div>
+
           <div style={styles.headerRight}>
-            <div style={styles.avatar}>{avatarLetter}</div>
+            {/* Avatar + nombre clickeable → abre perfil */}
+            <button
+              className="header-user-btn"
+              onClick={() => setProfileOpen(true)}
+              title="Mi perfil"
+            >
+              <img
+                src={normalizeProfilePicture(user?.profilePicture) || userDefault}
+                alt="Avatar"
+                style={{ ...styles.avatar, objectFit: 'cover' }}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = userDefault; }}
+              />
+              {!isMobile && (
+                <span style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>
+                  {user?.name ?? 'Usuario'}
+                </span>
+              )}
+            </button>
+
             <button style={styles.logoutBtn} onClick={handleLogout}>
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -187,13 +260,16 @@ export const DashboardPage = () => {
             </button>
           </div>
         </header>
+
         <main style={styles.content}>
           <Outlet />
         </main>
       </div>
 
-      {/* Burbuja de WhatsApp — solo para administradores */}
       {user?.role === "ADMIN_ROLE" && <WhatsAppBubble />}
+
+      {/* Modal de perfil */}
+      {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}
     </div>
   );
 };

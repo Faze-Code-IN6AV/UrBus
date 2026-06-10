@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using AuthService.Application.Interfaces;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
@@ -39,13 +40,24 @@ public class CloudinaryService(IConfiguration configuration) : ICloudinaryServic
 
     public string GetFullImageUrl(string imagePath)
     {
-        var baseUrl = configuration["CloudinarySettings:BaseUrl"] ?? "https://res.cloudinary.com/depgwnl2z/image/upload/v1769726229/";
-        var folder = configuration["CloudinarySettings:Folder"] ?? "auth_ks_in6av/profiles";
-        var defaultPath = configuration["CloudinarySettings:DefaultAvatarPath"] ?? "avatarDefault-1749508519496.png";
+        if (string.IsNullOrWhiteSpace(imagePath))
+        {
+            imagePath = configuration["CloudinarySettings:DefaultAvatarPath"] ?? "avatarDefault-1749508519496.png";
+        }
 
-        var pathToUse = string.IsNullOrEmpty(imagePath) ? defaultPath : imagePath;
+        if (Uri.IsWellFormedUriString(imagePath, UriKind.Absolute))
+        {
+            return imagePath;
+        }
 
-        if(!pathToUse.Contains('/')) pathToUse = $"{folder}/{pathToUse}";
+        var baseUrl = configuration["CloudinarySettings:BaseUrl"] ?? "https://res.cloudinary.com/depgwnl2z/image/upload/v1770923104/";
+        var folder = configuration["CloudinarySettings:Folder"] ?? "urBus/profiles";
+
+        baseUrl = Regex.Replace(baseUrl, "/v\\d+/?$", "/");
+        if (!baseUrl.EndsWith('/')) baseUrl += '/';
+
+        var pathToUse = imagePath.TrimStart('/');
+        if (!pathToUse.Contains('/')) pathToUse = $"{folder}/{pathToUse}";
 
         return $"{baseUrl}{pathToUse}";
     }
@@ -55,7 +67,7 @@ public class CloudinaryService(IConfiguration configuration) : ICloudinaryServic
         try {
             using var stream = new MemoryStream(imageFile.Data);
 
-            var folder = configuration["CloudinarySettings:Folder"] ?? "auth_ks_in6av/profiles";
+            var folder = configuration["CloudinarySettings:Folder"] ?? "urBus/profiles";
 
             var uploadParams = new ImageUploadParams
             {
