@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 namespace AuthService.Api.Extensions;
@@ -27,6 +28,8 @@ public static class AuthenticationExtensions
                 ValidIssuer = jwtSettings["Issuer"],
                 ValidAudience = jwtSettings["Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                NameClaimType = JwtRegisteredClaimNames.Sub,
+                RoleClaimType = "role",
                 ClockSkew = TimeSpan.Zero
             };
         });
