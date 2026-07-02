@@ -4,7 +4,7 @@ import { login as loginRequest, register as registerRequest } from '../../../sha
 import { updateProfile as updateProfileRequest } from '../../../shared/api/profile.js';
 import { showError } from '../../../shared/utils/toast.js';
 
-const ALLOWED_ROLES = ['ADMIN_ROLE', 'USER_ROLE', 'PASSENGER_ROLE'];
+const ALLOWED_ROLES = ['ADMIN_ROLE', 'USER_ROLE', 'PASSENGER_ROLE', 'DRIVER_ROLE'];
 
 export const useAuthStore = create(
     persist(
@@ -115,10 +115,6 @@ export const useAuthStore = create(
             try {
                 set({ loading: true, error: null });
                 const { data } = await updateProfileRequest(userId, formData);
-
-                // FIX: Merge completo con el usuario actual para no perder campos
-                // que el servidor no retorna (token, etc.) y actualizar todos los
-                // campos que el servidor sí retorna (name, surname, phone, profilePicture, role)
                 const currentUser = get().user;
                 const updatedUser = {
                     ...currentUser,
@@ -142,4 +138,4 @@ export const useAuthStore = create(
         }),
         { name: 'auth-UB-store' }
     )
-);
+); 
