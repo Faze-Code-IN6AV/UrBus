@@ -109,6 +109,7 @@ const ROLE_LABELS = {
   ADMIN_ROLE: 'Administrador',
   USER_ROLE: 'Usuario',
   PASSENGER_ROLE: 'Pasajero',
+  DRIVER_ROLE: 'Conductor',
 };
 
 export const ProfileModal = ({ onClose }) => {
