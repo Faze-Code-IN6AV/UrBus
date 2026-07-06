@@ -1,0 +1,141 @@
+import { useState } from 'react';
+import { useUserStore } from '../store/userStore.js';
+
+const AVATAR_PALETTE = [
+    { bg: '#f9d4c8', color: '#b85c3a' },
+    { bg: '#d4e8f9', color: '#2e6fa3' },
+    { bg: '#d4f0e0', color: '#2e7d52' },
+    { bg: '#f9e8d4', color: '#a06030' },
+    { bg: '#e8d4f9', color: '#6030a0' },
+    { bg: '#f9f0d4', color: '#8a7020' },
+];
+
+const ROLE_LABELS = {
+    ADMIN_ROLE:     'Administrador',
+    PASSENGER_ROLE: 'Pasajero',
+    DRIVER_ROLE:    'Conductor',
+    USER_ROLE:      'Usuario',
+};
+
+const ROLE_COLORS = {
+    ADMIN_ROLE:     { bg: '#fee2e2', color: '#b91c1c' },
+    PASSENGER_ROLE: { bg: '#dbeafe', color: '#1d4ed8' },
+    DRIVER_ROLE:    { bg: '#dcfce7', color: '#15803d' },
+    USER_ROLE:      { bg: '#f3f4f6', color: '#4b5563' },
+};
+
+const ROLE_OPTIONS = ['ADMIN_ROLE', 'PASSENGER_ROLE', 'DRIVER_ROLE', 'USER_ROLE'];
+
+function UserAvatar({ name }) {
+    const initials = name
+        ? name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+        : '?';
+    const palette = AVATAR_PALETTE[name ? name.charCodeAt(0) % AVATAR_PALETTE.length : 0];
+    return (
+        <div style={{
+            width: 48, height: 48, borderRadius: '50%',
+            background: palette.bg,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 15, fontWeight: 800, color: palette.color,
+            flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+            letterSpacing: '-0.5px',
+        }}>
+            {initials}
+        </div>
+    );
+}
+
+function RoleBadge({ role }) {
+    const palette = ROLE_COLORS[role] ?? ROLE_COLORS.USER_ROLE;
+    return (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center',
+            padding: '4px 10px', borderRadius: 999,
+            background: palette.bg, color: palette.color,
+            fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
+        }}>
+            {ROLE_LABELS[role] ?? role ?? 'Sin rol'}
+        </span>
+    );
+}
+
+export const UserCard = ({ user, currentUserId }) => {
+    const changeUserRole = useUserStore((s) => s.changeUserRole);
+    const [updating, setUpdating] = useState(false);
+
+    const { id, name, surname, email, role, status, isEmailVerified } = user;
+    const isSelf = String(id) === String(currentUserId);
+
+    const handleRoleChange = async (e) => {
+        const newRole = e.target.value;
+        if (newRole === role) return;
+
+        if (isSelf && role === 'ADMIN_ROLE' && newRole !== 'ADMIN_ROLE') {
+            const confirmed = window.confirm(
+                'Estás a punto de quitarte el rol de Administrador a ti mismo. ¿Deseas continuar?'
+            );
+            if (!confirmed) return;
+        }
+
+        setUpdating(true);
+        await changeUserRole(id, newRole);
+        setUpdating(false);
+    };
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '14px 18px', background: '#fff',
+        }}>
+            <UserAvatar name={`${name ?? ''} ${surname ?? ''}`.trim()} />
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                    margin: 0, fontWeight: 700, fontSize: 15,
+                    color: '#1a1a2e', lineHeight: 1.25,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                    {`${name ?? ''} ${surname ?? ''}`.trim() || 'Sin nombre'}
+                    {isSelf && (
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: '#9ca3af' }}>(Tú)</span>
+                    )}
+                </p>
+                <p style={{
+                    margin: '3px 0 0', fontSize: 12.5, color: '#9ca3af',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                    {email}
+                </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                <RoleBadge role={role} />
+                {!status && (
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: '#ef4444' }}>Inactivo</span>
+                )}
+                {!isEmailVerified && (
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: '#f59e0b' }}>Email sin verificar</span>
+                )}
+            </div>
+
+            <select
+                value={role ?? ''}
+                onChange={handleRoleChange}
+                disabled={updating}
+                title="Cambiar rol"
+                style={{
+                    padding: '7px 10px', borderRadius: 9,
+                    border: '1.5px solid #e5e7eb', background: '#fff',
+                    color: '#374151', fontSize: 12.5, fontWeight: 600,
+                    cursor: updating ? 'not-allowed' : 'pointer',
+                    opacity: updating ? 0.6 : 1, flexShrink: 0,
+                }}
+            >
+                {ROLE_OPTIONS.map((r) => (
+                    <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                ))}
+            </select>
+        </div>
+    );
+};

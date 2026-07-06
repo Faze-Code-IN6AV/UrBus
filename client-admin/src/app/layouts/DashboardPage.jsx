@@ -23,6 +23,13 @@ const normalizeProfilePicture = (url) => {
   return normalizeCloudinaryUrl(`${authBaseUrl}/${url}`);
 };
 
+const ROLE_LABELS = {
+  ADMIN_ROLE: "Administrador",
+  PASSENGER_ROLE: "Pasajero",
+  DRIVER_ROLE: "Conductor",
+  USER_ROLE: "Usuario",
+};
+
 const NAV_ITEMS = [
   {
     label: "Mapa en Vivo",
@@ -55,6 +62,17 @@ const NAV_ITEMS = [
         <line x1="4" y1="7" x2="20" y2="7" strokeLinecap="round" />
         <line x1="4" y1="12" x2="20" y2="12" strokeLinecap="round" />
         <line x1="4" y1="17" x2="20" y2="17" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    label: "Usuarios",
+    path: "/dashboard/users",
+    adminOnly: true,
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -140,7 +158,7 @@ export const DashboardPage = () => {
 
         <nav style={styles.nav}>
           <p style={styles.navGroup}>Principal</p>
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === "ADMIN_ROLE").map((item) => {
             const isActive =
               location.pathname === item.path ||
               location.pathname.startsWith(item.path + "/");
@@ -198,11 +216,7 @@ export const DashboardPage = () => {
           <div style={styles.sidebarUserInfo}>
             <p style={styles.sidebarUserName}>{user?.name ?? "Usuario"}</p>
             <p style={styles.sidebarUserRole}>
-              {user?.role === "ADMIN_ROLE"
-                ? "Administrador"
-                : user?.role === "PASSENGER_ROLE"
-                ? "Pasajero"
-                : "Usuario"}
+              {ROLE_LABELS[user?.role] ?? "Usuario"}
             </p>
           </div>
           <svg
