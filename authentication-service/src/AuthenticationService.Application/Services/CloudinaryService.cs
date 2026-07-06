@@ -40,9 +40,15 @@ public class CloudinaryService(IConfiguration configuration) : ICloudinaryServic
 
     public string GetFullImageUrl(string imagePath)
     {
-        if (string.IsNullOrWhiteSpace(imagePath))
+        var defaultAvatarPath = configuration["CloudinarySettings:DefaultAvatarPath"] ?? "avatarDefault-1749508519496.png";
+        var defaultAvatarFileName = defaultAvatarPath.Contains('/') ? defaultAvatarPath.Split('/').Last() : defaultAvatarPath;
+
+        // Si no hay imagen real (o el valor guardado es justo el placeholder por defecto),
+        // no armamos una URL hacia Cloudinary: puede que ese archivo no exista en la cuenta
+        // configurada. Regresamos vacío y el frontend cae a su imagen local (assets/img/user.png).
+        if (string.IsNullOrWhiteSpace(imagePath) || imagePath == defaultAvatarFileName)
         {
-            imagePath = configuration["CloudinarySettings:DefaultAvatarPath"] ?? "avatarDefault-1749508519496.png";
+            return string.Empty;
         }
 
         if (Uri.IsWellFormedUriString(imagePath, UriKind.Absolute))

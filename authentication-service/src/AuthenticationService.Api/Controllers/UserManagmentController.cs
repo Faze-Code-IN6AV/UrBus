@@ -9,6 +9,18 @@ namespace AuthenticationService.Api.Controllers;
 [Tags("User Management")]
 public class UserManagementController(IUserManagementService userManagementService) : ControllerBase
 {
+    /// <summary>Listar todos los usuarios con su rol</summary>
+    [Authorize(Roles = "ADMIN_ROLE")]
+    [HttpGet]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var allUsers = await userManagementService.GetAllUsersAsync();
+        return Ok(allUsers);
+    }
+
     /// <summary>Actualizar rol de usuario</summary>
     [Authorize(Roles = "ADMIN_ROLE")]
     [HttpPut("{userId}/role")]
