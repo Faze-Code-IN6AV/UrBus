@@ -9,6 +9,17 @@ namespace AuthenticationService.Persistence.Repositories;
 
 public class UserRepository(ApplicationDbContext context) : IUserRepository
 {
+    public async Task<IReadOnlyList<User>> GetAllUsersAsync()
+    {
+        return await context.Users
+            .Include(u => u.UserProfile)
+            .Include(u => u.UserEmail)
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .OrderBy(u => u.Name)
+            .ToListAsync();
+    }
+
     public async Task<User> GetByIdAsync(string id)
     {
         var user = await context.Users

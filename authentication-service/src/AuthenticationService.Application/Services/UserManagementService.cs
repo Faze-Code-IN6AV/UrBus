@@ -9,6 +9,27 @@ namespace AuthService.Application.Services;
 
 public class UserManagementService(IUserRepository users, IRoleRepository roles, ICloudinaryService cloudinary) : IUserManagementService
 {
+    public async Task<IReadOnlyList<UserResponseDto>> GetAllUsersAsync()
+    {
+        var allUsers = await users.GetAllUsersAsync();
+
+        return allUsers.Select(u => new UserResponseDto
+        {
+            Id = u.Id,
+            Name = u.Name,
+            Surname = u.Surname,
+            Username = u.Username,
+            Email = u.Email,
+            ProfilePicture = cloudinary.GetFullImageUrl(u.UserProfile?.ProfilePicture ?? string.Empty),
+            Phone = u.UserProfile?.Phone ?? string.Empty,
+            Role = u.UserRoles.FirstOrDefault()?.Role?.Name ?? string.Empty,
+            Status = u.Status,
+            IsEmailVerified = u.UserEmail?.EmailVerified ?? false,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt
+        }).ToList();
+    }
+
     public async Task<UserResponseDto> UpdateUserRoleAsync(string userId, string roleName)
     {
         roleName = roleName?.Trim().ToUpperInvariant() ?? string.Empty;
