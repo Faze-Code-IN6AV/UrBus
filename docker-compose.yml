@@ -1,0 +1,187 @@
+services:
+  postgres:
+    image: postgres:13
+    container_name: urbus_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - urbus_network
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: urbus_mongo
+    ports:
+      - "${MONGO_PORT}:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - urbus_network
+    restart: unless-stopped
+
+  authentication-service:
+    build:
+      context: ./authentication-service
+      dockerfile: ../dockerfiles/Dockerfile.auth-service
+    container_name: urbus_authentication_service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5166
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Port=5432"
+      CloudinarySettings__CloudName: ${CLOUDINARY_CLOUD_NAME}
+      CloudinarySettings__ApiKey: ${CLOUDINARY_API_KEY}
+      CloudinarySettings__ApiSecret: ${CLOUDINARY_API_SECRET}
+      CloudinarySettings__BaseUrl: ${CLOUDINARY_BASE_URL}
+      CloudinarySettings__Folder: ${CLOUDINARY_FOLDER}
+      CloudinarySettings__DefaultAvatarPath: ${CLOUDINARY_DEFAULT_AVATAR}
+      SmtpSettings__Host: ${SMTP_HOST}
+      SmtpSettings__Port: ${SMTP_PORT}
+      SmtpSettings__Username: ${SMTP_USERNAME}
+      SmtpSettings__Password: ${SMTP_PASSWORD}
+      SmtpSettings__FromEmail: ${SMTP_FROM_EMAIL}
+      SmtpSettings__FromName: ${SMTP_FROM_NAME}
+      AppSettings__FrontendUrl: ${AUTH_FRONTEND_URL}
+      JwtSettings__SecretKey: ${JWT_SECRET}
+      JwtSettings__Issuer: ${JWT_ISSUER}
+      JwtSettings__Audience: ${JWT_AUDIENCE}
+      JwtSettings__ExpirationMinutes: ${JWT_EXPIRATION_MINUTES}
+    volumes:
+      - ./authentication-service:/src
+    ports:
+      - "${AUTH_PORT}:5166"
+    depends_on:
+      - postgres
+    networks:
+      - urbus_network
+    restart: unless-stopped
+
+  location-service:
+    build:
+      context: ./location-service
+      dockerfile: ../dockerfiles/Dockerfile.location-service
+    container_name: urbus_location_service
+    environment:
+      PORT: ${LOCATION_PORT}
+      URI_MONGODB: mongodb://mongo:27017/UrBus
+    volumes:
+      - ./location-service:/app
+      - /app/node_modules
+    ports:
+      - "${LOCATION_PORT}:${LOCATION_PORT}"
+    depends_on:
+      - mongo
+    networks:
+      - urbus_network
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: ../dockerfiles/Dockerfile.notification-service
+    container_name: urbus_notification_service
+    environment:
+      PORT: ${NOTIFICATION_PORT}
+      URI_MONGODB: mongodb://mongo:27017/notifications
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+    volumes:
+      - ./notification-service:/app
+      - /app/node_modules
+    ports:
+      - "${NOTIFICATION_HOST_PORT}:${NOTIFICATION_PORT}"
+    depends_on:
+      - mongo
+    networks:
+      - urbus_network
+    restart: unless-stopped
+
+  passenger-service:
+    build:
+      context: ./passenger-service
+      dockerfile: ../dockerfiles/Dockerfile.passenger-service
+    container_name: urbus_passenger_service
+    environment:
+      PORT: ${PASSENGER_PORT}
+      URI_MONGODB: mongodb://mongo:27017/passenger
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+    volumes:
+      - ./passenger-service:/app
+      - /app/node_modules
+    ports:
+      - "${PASSENGER_PORT}:${PASSENGER_PORT}"
+    depends_on:
+      - mongo
+    networks:
+      - urbus_network
+    restart: unless-stopped
+
+  post-service:
+    build:
+      context: ./post-service
+      dockerfile: ../dockerfiles/Dockerfile.post-service
+    container_name: urbus_post_service
+    environment:
+      PORT: ${POST_PORT}
+      URI_MONGODB: mongodb://mongo:27017/urbus_posts
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    volumes:
+      - ./post-service:/app
+      - /app/node_modules
+    ports:
+      - "${POST_PORT}:${POST_PORT}"
+    depends_on:
+      - mongo
+    networks:
+      - urbus_network
+    restart: unless-stopped
+
+  client-admin:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/Dockerfile.client-admin
+    container_name: urbus_client_admin
+    environment:
+      VITE_LOCATION_SERVICE_URL: ${VITE_LOCATION_SERVICE_URL}
+      VITE_AUTH_URL: ${VITE_AUTH_URL}
+      VITE_POST_URL: ${VITE_POST_URL}
+      VITE_PASSENGER_URL: ${VITE_PASSENGER_URL}
+      VITE_NOTIFICATION_URL: ${VITE_NOTIFICATION_URL}
+    volumes:
+      - ./client-admin:/app
+      - /app/node_modules
+    ports:
+      - "${CLIENT_ADMIN_PORT}:5173"
+    depends_on:
+      - authentication-service
+      - location-service
+      - notification-service
+      - passenger-service
+      - post-service
+    networks:
+      - urbus_network
+    restart: unless-stopped
+
+networks:
+  urbus_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongo_data:

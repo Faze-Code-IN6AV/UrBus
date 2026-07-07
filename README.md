@@ -16,10 +16,12 @@ Cada servicio puede ser desarrollado y mantenido por diferentes equipos de estud
 El sistema está construido utilizando:
  
 * **Node.js** para servicios backend y APIs
-* **ASP.NET Core** para servicios principales del sistema
-* **PostgreSQL** como base de datos relacional
-* **Docker** para facilitar el despliegue y la ejecución del entorno
-* Comunicación entre servicios mediante **HTTP APIs**
+* **ASP.NET Core** para el servicio de autenticación
+* **PostgreSQL** como base de datos relacional para usuarios
+* **MongoDB** como base de datos NoSQL para microservicios
+* **Cloudinary** para almacenamiento de imágenes
+* **Docker** para facilitar el despliegue del servicio de base de datos
+* Comunicación entre servicios mediante **HTTP APIs** y **Socket.IO**
  
 ---
  
@@ -43,27 +45,29 @@ Esto permite:
 | Tecnología     | Uso en el proyecto                  |
 | -------------- | ----------------------------------- |
 | Node.js        | Desarrollo de microservicios        |
-| ASP.NET Core   | Servicios principales del sistema   |
+| ASP.NET Core   | Autenticación y persistencia de usuarios |
 | PostgreSQL     | Base de datos relacional            |
 | MongoDB        | Base de datos NoSQL por servicio    |
-| Docker         | Contenedorización del entorno       |
-| Docker Compose | Orquestación de contenedores        |
+| Cloudinary     | Almacenamiento de imágenes          |
+| Docker         | Contenedorización de base de datos  |
+| Docker Compose | Orquestación de PostgreSQL          |
 | Git / GitHub   | Control de versiones y colaboración |
  
 ---
  
 ## Estado del Proyecto
  
-El proyecto se encuentra en fase de desarrollo inicial.
+El proyecto se encuentra en desarrollo activo.
  
 Actualmente se está trabajando en:
  
-* Definición de arquitectura general
-* Implementación de servicios base
-* Integración entre equipos de desarrollo
-* Configuración del entorno de desarrollo con Docker
- 
-Con el avance del proyecto se irán integrando nuevos servicios y funcionalidades.
+* Autenticación con JWT, refresh token, verificación de correo y recuperación de contraseña
+* Registro con imagen opcional de perfil en AuthenticationService
+* Servicio de localización en tiempo real con Socket.IO
+* Envío de notificaciones WhatsApp y consulta de grupos
+* Gestión de pasajeros con rutas protegidas por JWT
+* Publicaciones con carga de imágenes y soft delete
+* Interfaz administrativa React/Vite en `client-admin`
  
 ---
  
@@ -74,17 +78,20 @@ La plataforma está diseñada para crecer mediante servicios independientes.
 * **AuthenticationService**
   Gestión de autenticación, usuarios, control de acceso y roles.
  
+* **Client-admin**
+  Interfaz administrativa React/Vite para consumir las APIs del sistema.
+ 
 * **LocationService**
-  Gestión de ubicación en tiempo real del bus mediante mapas interactivos.
+  Gestión de ubicación en tiempo real del bus y emisión de eventos de llegada.
  
 * **NotificationService**
-  Comunicación entre conductor y pasajeros mediante notificaciones (integración con WhatsApp).
+  Envío de notificaciones mediante WhatsApp y consulta de estado de sesión.
  
 * **PassengerService**
-  Gestión de estudiantes, control de asistencia y estado de viaje.
+  Gestión de pasajeros y estados de viaje.
  
 * **PostService**
-  Publicación de avisos como retrasos, cambios de ruta o información relevante.
+  Publicación de avisos con carga de imágenes y reactivación de publicaciones.
  
 ---
  
@@ -99,6 +106,8 @@ Cada microservicio utiliza su propia base de datos siguiendo buenas prácticas d
 | NotificationService   | notifications | MongoDB    |
 | PassengerService      | passenger     | MongoDB    |
 | PostService           | urbus_posts   | MongoDB    |
+ 
+> El archivo de orquestación disponible es `pg_db/docker-compose.yml` para PostgreSQL. MongoDB debe estar disponible localmente o en una instancia externa.
  
 ---
  
@@ -123,63 +132,75 @@ Microservicio encargado de la autenticación y gestión de usuarios.
 * Registro de usuarios
 * Inicio de sesión
 * Verificación de correo electrónico
-* Gestión de roles y control de acceso
+* Reenvío de verificación
 * Recuperación y restablecimiento de contraseña
 * Control de acceso mediante JWT
-* Renovación de tokens
-
+* Renovación y revocación de refresh token
+* Gestión de roles y rutas administrativas
+* Carga opcional de imagen de perfil con multipart/form-data
+ 
 ### Endpoints
-
+ 
 **Base URL:**
-
+ 
 ```
 http://localhost:5166/api/v1
 ```
-
+ 
 #### Health Check
-
-| Método | Endpoint | Descripción              | Autenticación |
-| ------ | -------- | ------------------------ | -------------- |
-| GET    | /health  | Verificar estado del servicio | No |
-| GET    | /swagger | Documentación de la API (Swagger UI) | No |
-
+ 
+| Método | Endpoint | Descripción                                 | Autenticación |
+| ------ | -------- | ------------------------------------------- | -------------- |
+| GET    | /health  | Verificar estado del servicio               | No |
+| GET    | /api/v1/health | Verificar estado del servicio         | No |
+| GET    | /swagger | Documentación de la API (Swagger UI)        | No |
+ 
 #### Autenticación (Auth)
-
+ 
 | Método | Endpoint                    | Descripción                              | Autenticación |
 | ------ | ----------------------------- | ---------------------------------------- | -------------- |
 | POST   | /auth/login                 | Iniciar sesión de usuario                | No |
 | POST   | /auth/register              | Registrar nuevo usuario                  | No |
-| POST   | /auth/verify-email          | Verificar correo electrónico              | No |
+| POST   | /auth/verify-email          | Verificar correo electrónico             | No |
 | POST   | /auth/resend-verification   | Reenviar correo de verificación          | No |
-| POST   | /auth/forgot-password       | Solicitar recuperación de contraseña      | No |
+| POST   | /auth/forgot-password       | Solicitar recuperación de contraseña     | No |
 | POST   | /auth/reset-password        | Restablecer contraseña                   | No |
 | POST   | /auth/refresh               | Renovar access token usando refresh token | No |
 | POST   | /auth/logout                | Cerrar sesión (revocar refresh token)    | Sí (JWT) |
-
-#### Gestión de Usuarios (User Management)
-
+ 
+#### Gestión de Usuarios
+ 
 | Método | Endpoint              | Descripción                     | Autenticación | Roles |
-| ------ | ---------------------- | ------------------------------- | -------------- | -------- |
+| ------ | --------------------- | ------------------------------- | -------------- | -------- |
 | PUT    | /users/{userId}/role  | Actualizar rol de usuario       | Sí (JWT)      | ADMIN_ROLE |
 | GET    | /users/{userId}/roles | Obtener roles de un usuario     | Sí (JWT)      | ADMIN_ROLE |
 | GET    | /users/by-role        | Listar usuarios por rol         | Sí (JWT)      | ADMIN_ROLE |
-
-* Visualización del bus en mapa
-* Seguimiento en tiempo real
-* Definición de destino
+ 
+---
+ 
+## LocationService
+ 
+Servicio encargado de la ubicación en tiempo real del bus.
+ 
+### Funcionalidades
+ 
+* Seguimiento de ubicación con Socket.IO
+* Emisión del evento `updateBus`
+* Detección de llegada a Kinal y emisión del evento `busArrived`
+* Vista de seguimiento servida en `/urbus/v1/`
  
 ### Endpoints
  
 **Base URL:**
  
 ```
-http://localhost:3033/UrBus/v1
+http://localhost:3033/urbus/v1
 ```
  
 | Método | Endpoint | Descripción         |
 | ------ | -------- | ------------------- |
 | GET    | /health  | Estado del servicio |
-| GET    | /        | Obtener ubicación   |
+| GET    | /        | Vista de ubicación  |
 | GET    | /swagger | Documentación de la API (Swagger UI) |
  
 ---
@@ -190,16 +211,11 @@ Servicio encargado del envío de notificaciones mediante WhatsApp.
  
 ### Funcionalidades
  
-* Generación de código QR
-* Envío de mensajes a grupos
-* Notificaciones automáticas
- 
-### Tipos de notificaciones
- 
-* Llegada
-* Retrasos
-* Cambios de ruta
-* Mensajes personalizados
+* Generación de código QR de WhatsApp
+* Consulta del estado de sesión de WhatsApp
+* Envío de notificaciones de llegada, retraso y cambio de ruta
+* Envío de mensajes personalizados
+* Consulta de grupos de WhatsApp
  
 ### Endpoints
  
@@ -209,15 +225,17 @@ Servicio encargado del envío de notificaciones mediante WhatsApp.
 http://localhost:5000/urbus/v1
 ```
  
-| Método | Endpoint      | Descripción           |
-| ------ | ------------- | --------------------- |
-| GET    | /health       | Estado del servicio   |
-| POST   | /arrival      | Notificar llegada     |
-| POST   | /delay        | Notificar retraso     |
-| POST   | /route-change | Cambio de ruta        |
-| POST   | /custom       | Mensaje personalizado |
-| GET    | /groups       | Obtener grupos        |
-| GET    | /swagger      | Documentación de la API (Swagger UI) |
+| Método | Endpoint                                 | Descripción                                      | Autenticación |
+| ------ | ---------------------------------------- | ------------------------------------------------ | -------------- |
+| GET    | /health                                  | Estado del servicio                              | No |
+| GET    | /notifications/whatsapp/status           | Estado de la sesión de WhatsApp                  | No |
+| GET    | /notifications/whatsapp/qr               | Obtener QR de WhatsApp                           | No |
+| POST   | /notifications/arrival                   | Notificar llegada                                | Sí (JWT) |
+| POST   | /notifications/delay                     | Notificar retraso                                | Sí (JWT) |
+| POST   | /notifications/route-change              | Cambio de ruta                                   | Sí (JWT) |
+| POST   | /notifications/custom                    | Mensaje personalizado                            | Sí (JWT) |
+| GET    | /notifications/groups                    | Obtener grupos de WhatsApp                       | Sí (JWT) |
+| GET    | /swagger                                 | Documentación de la API (Swagger UI)             | No |
  
 ---
  
@@ -230,6 +248,7 @@ Servicio encargado de la gestión de pasajeros.
 * Registro de estudiantes
 * Listado de pasajeros
 * Control de asistencia
+* Actualización de estado de pasajero
 * Eliminación de pasajeros
  
 ### Endpoints
@@ -259,7 +278,9 @@ Servicio encargado de las publicaciones del sistema.
 * Crear avisos
 * Publicaciones con imagen
 * Consultar publicaciones
-* Reactivar publicaciones
+* Actualizar publicaciones
+* Eliminación con soft delete
+* Reactivación de publicaciones eliminadas
  
 ### Endpoints
  
@@ -287,6 +308,7 @@ http://localhost:5001/urbus/v1/posts
 ```
 UrBus/
 ├── authentication-service/
+├── client-admin/
 ├── location-service/
 ├── notification-service/
 ├── passenger-service/
@@ -303,6 +325,7 @@ UrBus/
 ### Prerequisitos
  
 * Node.js 18+
+* pnpm
 * .NET 8 SDK
 * Docker
 * PostgreSQL
@@ -315,14 +338,15 @@ UrBus/
  
 ```bash
 git clone <url-del-repositorio>
-cd urbus
+cd UrBus
 ```
  
 ---
  
-### Base de datos con Docker
+### Base de datos PostgreSQL con Docker
  
 ```bash
+cd pg_db
 docker compose down -v
 docker compose up -d
 ```
@@ -332,15 +356,41 @@ docker compose up -d
 ### Ejecutar servicios Node
  
 ```bash
+cd client-admin
+pnpm install
+pnpm run dev
+```
+ 
+```bash
+cd ../location-service
+pnpm install
+pnpm run dev
+```
+ 
+```bash
+cd ../notification-service
+pnpm install
+pnpm run dev
+```
+ 
+```bash
+cd ../passenger-service
+pnpm install
+pnpm run dev
+```
+ 
+```bash
+cd ../post-service
 pnpm install
 pnpm run dev
 ```
  
 ---
  
-### Ejecutar servicios .NET
+### Ejecutar servicio ASP.NET Core
  
 ```bash
+cd authentication-service/src/AuthenticationService.Api
 dotnet restore
 dotnet build
 dotnet run
