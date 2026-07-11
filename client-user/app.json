@@ -31,6 +31,12 @@
         {
           "photosPermission": "UrBus necesita acceso a tus fotos para actualizar tu foto de perfil."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "UrBus necesita tu ubicación para transmitir la ruta del bus en tiempo real."
+        }
       ]
     ]
   }
