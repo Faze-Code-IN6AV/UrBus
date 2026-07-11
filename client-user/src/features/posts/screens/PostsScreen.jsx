@@ -1,63 +1,139 @@
 // src/features/posts/screens/PostsScreen.jsx
+// Pantalla "Anuncios del Bus" — replica el mockup: tarjetas con icono cuadrado,
+// título en negrita y "Hace X min". Para DRIVER_ROLE/ADMIN_ROLE agrega un botón
+// flotante para publicar y acciones de editar/eliminar (funciones portadas de
+// client-admin, features/post/pages/PostListPage.jsx).
 import React, { useEffect, useCallback, useState } from 'react';
 import { FlatList, RefreshControl, TouchableOpacity, View, Text, Image, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { usePosts } from '../hooks/usePosts';
-import { Card, EmptyState, LoadingSpinner } from '../../../shared/components/common/Common';
-import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
+import PostFormModal from '../components/PostFormModal';
+import ConfirmModal from '../../../shared/components/common/ConfirmModal';
+import { EmptyState, LoadingSpinner } from '../../../shared/components/common/Common';
+import useAuthStore from '../../../shared/store/authStore';
+import { COLORS, SPACING, FONT_SIZE, RADIUS, SHADOWS, MANAGER_ROLES } from '../../../shared/constants/theme';
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return 'Hace un momento';
+  if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
+  return `Hace ${Math.floor(diff / 86400)} días`;
+}
 
 export default function PostsScreen({ navigation }) {
-  const { posts, loading, error, fetchPosts } = usePosts();
-  const [refreshing, setRefreshing] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const canManage = MANAGER_ROLES.includes(user?.role);
 
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+  const { posts, loading, error, fetchPosts, addPost, editPost, removePost } = usePosts();
+  const [refreshing, setRefreshing] = useState(false);
+  const [formModal, setFormModal] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  useEffect(() => { fetchPosts(user?.role === 'DRIVER_ROLE'); }, [fetchPosts, user?.role]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchPosts();
+    await fetchPosts(user?.role === 'DRIVER_ROLE');
     setRefreshing(false);
-  }, [fetchPosts]);
+  }, [fetchPosts, user?.role]);
 
-  if (loading && posts.length === 0) {
-    return <LoadingSpinner />;
-  }
+  const handleFormSubmit = async (formData) => {
+    const result = formModal === 'create' ? await addPost(formData) : await editPost(formModal.post.id, formData);
+    if (result.success) setFormModal(null);
+  };
 
-  if (!loading && posts.length === 0) {
-    return (
-      <View style={styles.container}>
-        <EmptyState message={error ?? 'No hay anuncios por el momento'} />
-      </View>
-    );
-  }
+  const handleDeleteConfirm = async () => {
+    await removePost(deleteTarget.id);
+    setDeleteTarget(null);
+  };
+
+  const visiblePosts = posts.filter((p) => !p.isDeleted);
 
   return (
-    <FlatList
-      style={styles.container}
-      contentContainerStyle={styles.list}
-      data={posts}
-      keyExtractor={(item) => item.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      renderItem={({ item }) => (
-        <TouchableOpacity onPress={() => navigation.navigate('PostDetail', { id: item.id })}>
-          <Card style={styles.card}>
-            {item.image ? <Image source={{ uri: item.image }} style={styles.image} /> : null}
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.excerpt} numberOfLines={2}>
-              {item.content}
-            </Text>
-          </Card>
+    <View style={styles.container}>
+      <FlatList
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        data={visiblePosts}
+        keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        ListEmptyComponent={!loading ? <EmptyState message={error ?? 'No hay anuncios por el momento'} icon="campaign" /> : null}
+        ListHeaderComponent={loading && visiblePosts.length === 0 ? <LoadingSpinner /> : null}
+        renderItem={({ item }) => {
+          const isOwner = user?.id === item.createdBy || user?.uid === item.createdBy;
+          const canEdit = canManage && (user?.role === 'ADMIN_ROLE' || isOwner);
+          return (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('PostDetail', { id: item.id })}
+              style={styles.card}
+            >
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={styles.icon} />
+              ) : (
+                <View style={styles.iconPlaceholder}>
+                  <MaterialIcons name="directions-bus" size={26} color={COLORS.accentDark} />
+                </View>
+              )}
+              <View style={styles.cardBody}>
+                <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+                <Text style={styles.cardTime}>{timeAgo(item.createdAt)}</Text>
+              </View>
+              {canEdit ? (
+                <View style={styles.cardActions}>
+                  <TouchableOpacity style={styles.iconBtn} onPress={() => setFormModal({ post: item })}>
+                    <MaterialIcons name="edit" size={15} color={COLORS.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.iconBtn, styles.iconBtnDanger]} onPress={() => setDeleteTarget(item)}>
+                    <MaterialIcons name="delete-outline" size={15} color={COLORS.error} />
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </TouchableOpacity>
+          );
+        }}
+      />
+
+      {canManage ? (
+        <TouchableOpacity style={styles.fab} onPress={() => setFormModal('create')} activeOpacity={0.85}>
+          <MaterialIcons name="add" size={26} color="#fff" />
         </TouchableOpacity>
-      )}
-    />
+      ) : null}
+
+      <PostFormModal
+        visible={Boolean(formModal)}
+        post={formModal?.post}
+        loading={loading}
+        onClose={() => setFormModal(null)}
+        onSubmit={handleFormSubmit}
+      />
+
+      <ConfirmModal
+        visible={Boolean(deleteTarget)}
+        title="Eliminar anuncio"
+        message={deleteTarget ? `¿Seguro que quieres eliminar "${deleteTarget.title}"?` : ''}
+        loading={loading}
+        onConfirm={handleDeleteConfirm}
+        onClose={() => setDeleteTarget(null)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  list: { padding: SPACING.md },
-  card: { marginBottom: SPACING.md },
-  image: { width: '100%', height: 160, borderRadius: 8, marginBottom: SPACING.sm },
-  title: { fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.text, marginBottom: SPACING.xs },
-  excerpt: { fontSize: FONT_SIZE.sm, color: COLORS.textLight },
+  list: { flex: 1 },
+  listContent: { padding: SPACING.md },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.md, ...SHADOWS.soft },
+  icon: { width: 52, height: 52, borderRadius: RADIUS.md, marginRight: SPACING.md },
+  iconPlaceholder: { width: 52, height: 52, borderRadius: RADIUS.md, marginRight: SPACING.md, backgroundColor: '#FFF6DA', alignItems: 'center', justifyContent: 'center' },
+  cardBody: { flex: 1, minWidth: 0 },
+  cardTitle: { fontSize: FONT_SIZE.md, fontWeight: '700', color: COLORS.text, lineHeight: 21 },
+  cardTime: { fontSize: 12, color: COLORS.textMuted, marginTop: 6 },
+  cardActions: { flexDirection: 'row', gap: 6, marginLeft: SPACING.sm },
+  iconBtn: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#e8f0fe' },
+  iconBtnDanger: { backgroundColor: '#fee2e2' },
+  fab: { position: 'absolute', right: SPACING.lg, bottom: SPACING.lg, width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', ...SHADOWS.card },
 });

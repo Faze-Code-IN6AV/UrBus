@@ -3,12 +3,17 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import { ROLES } from '../constants/theme';
 
-const ALLOWED_ROLES = ['USER_ROLE', 'PASSENGER_ROLE'];
+// client-user ahora admite los 4 roles del sistema: el pasajero/usuario usa la app
+// para ver su estado, la ruta y los anuncios; el conductor (DRIVER_ROLE) y el
+// administrador (ADMIN_ROLE) obtienen además las funciones de gestión que antes
+// solo existían en client-admin (lista de pasajeros, anuncios y control de ruta).
+const ALLOWED_ROLES = [ROLES.USER, ROLES.PASSENGER, ROLES.DRIVER, ROLES.ADMIN];
 
 const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       token: null,
       refreshToken: null,
       expiresAt: null,
@@ -21,7 +26,6 @@ const useAuthStore = create(
           throw new Error('No tienes permisos para usar esta app');
         }
 
-        // El refresh token se guarda en SecureStore, no en AsyncStorage
         SecureStore.setItemAsync('refreshToken', refreshToken).catch(() => {});
 
         set({
@@ -49,6 +53,14 @@ const useAuthStore = create(
           user: { ...state.user, ...partial },
         }));
       },
+
+      // Helpers de rol, equivalentes a los usados en client-admin
+      isManager: () => {
+        const role = get().user?.role;
+        return role === ROLES.DRIVER || role === ROLES.ADMIN;
+      },
+      isAdmin: () => get().user?.role === ROLES.ADMIN,
+      isDriver: () => get().user?.role === ROLES.DRIVER,
     }),
     {
       name: 'client-user-auth',
@@ -67,7 +79,6 @@ const useAuthStore = create(
   )
 );
 
-// Marca la hidratación como completa una vez que persist termina de leer AsyncStorage
 useAuthStore.persist.onFinishHydration(() => {
   useAuthStore.setState({ _hasHydrated: true });
 });

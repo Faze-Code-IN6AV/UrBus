@@ -1,27 +1,60 @@
 // src/features/auth/screens/RegisterScreen.jsx
-import React from 'react';
-import { View, Text, ScrollView, Alert, StyleSheet } from 'react-native';
+// Replica el mockup "Registrar": icono de cámara para foto de perfil, tarjeta
+// agrupada con campos separados por líneas y botón degradado amarillo.
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Alert, TouchableOpacity, Image, TextInput, StyleSheet } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
+import * as ImagePicker from 'expo-image-picker';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
-import Input from '../../../shared/components/common/Input';
 import Button from '../../../shared/components/common/Button';
-import { COLORS, SPACING, FONT_SIZE } from '../../../shared/constants/theme';
+import { COLORS, SPACING, FONT_SIZE, RADIUS, SHADOWS } from '../../../shared/constants/theme';
+
+function Field({ control, name, rules, placeholder, ...rest }) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={rules}
+      render={({ field: { onChange, value }, fieldState: { error } }) => (
+        <View style={styles.fieldWrap}>
+          <TextInput
+            value={value}
+            onChangeText={onChange}
+            placeholder={placeholder}
+            placeholderTextColor={COLORS.textMuted}
+            style={styles.fieldInput}
+            {...rest}
+          />
+          {error ? <Text style={styles.fieldError}>{error.message}</Text> : null}
+        </View>
+      )}
+    />
+  );
+}
 
 export default function RegisterScreen({ navigation }) {
   const { handleRegister, loading, error } = useAuth();
+  const [photo, setPhoto] = useState(null); // { uri, name, type }
   const { control, handleSubmit } = useForm({
-    defaultValues: {
-      name: '',
-      surname: '',
-      username: '',
-      email: '',
-      password: '',
-      phone: '',
-    },
+    defaultValues: { name: '', surname: '', username: '', email: '', password: '', phone: '' },
   });
 
+  const pickPhoto = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      setPhoto({ uri: asset.uri, name: asset.fileName ?? 'profile.jpg', type: 'image/jpeg' });
+    }
+  };
+
   const onSubmit = async (values) => {
-    const result = await handleRegister(values);
+    const result = await handleRegister({ ...values, profilePicture: photo ?? undefined });
 
     if (!result.success) {
       Alert.alert('No se pudo completar el registro', result.message ?? 'Intenta de nuevo');
@@ -38,125 +71,85 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Crear cuenta</Text>
-      <Text style={styles.subtitle}>Regístrate para rastrear tu bus con UrBus</Text>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <Text style={styles.title}>Registrar</Text>
 
-      <Controller
-        control={control}
-        name="name"
-        rules={{ required: 'El nombre es obligatorio', maxLength: { value: 25, message: 'Máximo 25 caracteres' } }}
-        render={({ field: { onChange, value }, fieldState: { error: fe } }) => (
-          <Input label="Nombre" value={value} onChangeText={onChange} error={fe?.message} />
+      <TouchableOpacity style={styles.photoCircle} onPress={pickPhoto} activeOpacity={0.8}>
+        {photo ? (
+          <Image source={{ uri: photo.uri }} style={styles.photoImage} />
+        ) : (
+          <MaterialIcons name="photo-camera" size={40} color={COLORS.primary} />
         )}
-      />
+      </TouchableOpacity>
 
-      <Controller
-        control={control}
-        name="surname"
-        rules={{ required: 'El apellido es obligatorio', maxLength: { value: 25, message: 'Máximo 25 caracteres' } }}
-        render={({ field: { onChange, value }, fieldState: { error: fe } }) => (
-          <Input label="Apellido" value={value} onChangeText={onChange} error={fe?.message} />
-        )}
-      />
-
-      <Controller
-        control={control}
-        name="username"
-        rules={{ required: 'El usuario es obligatorio' }}
-        render={({ field: { onChange, value }, fieldState: { error: fe } }) => (
-          <Input label="Usuario" value={value} onChangeText={onChange} autoCapitalize="none" error={fe?.message} />
-        )}
-      />
-
-      <Controller
-        control={control}
-        name="email"
-        rules={{
-          required: 'El correo es obligatorio',
-          pattern: { value: /^\S+@\S+\.\S+$/, message: 'Correo inválido' },
-        }}
-        render={({ field: { onChange, value }, fieldState: { error: fe } }) => (
-          <Input
-            label="Correo electrónico"
-            value={value}
-            onChangeText={onChange}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            error={fe?.message}
-          />
-        )}
-      />
-
-      <Controller
-        control={control}
-        name="password"
-        rules={{ required: 'La contraseña es obligatoria', minLength: { value: 8, message: 'Mínimo 8 caracteres' } }}
-        render={({ field: { onChange, value }, fieldState: { error: fe } }) => (
-          <Input label="Contraseña" value={value} onChangeText={onChange} secureTextEntry error={fe?.message} />
-        )}
-      />
-
-      <Controller
-        control={control}
-        name="phone"
-        rules={{
-          required: 'El teléfono es obligatorio',
-          pattern: { value: /^\d{8}$/, message: 'Debe tener exactamente 8 dígitos' },
-        }}
-        render={({ field: { onChange, value }, fieldState: { error: fe } }) => (
-          <Input
-            label="Teléfono"
-            value={value}
-            onChangeText={onChange}
-            keyboardType="phone-pad"
-            maxLength={8}
-            error={fe?.message}
-          />
-        )}
-      />
+      <View style={styles.card}>
+        <Field control={control} name="name" placeholder="Nombre" rules={{ required: 'El nombre es obligatorio', maxLength: { value: 25, message: 'Máximo 25 caracteres' } }} />
+        <View style={styles.divider} />
+        <Field control={control} name="surname" placeholder="Apellido" rules={{ required: 'El apellido es obligatorio', maxLength: { value: 25, message: 'Máximo 25 caracteres' } }} />
+        <View style={styles.divider} />
+        <Field control={control} name="username" placeholder="Usuario" autoCapitalize="none" rules={{ required: 'El usuario es obligatorio' }} />
+        <View style={styles.divider} />
+        <Field
+          control={control}
+          name="email"
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          rules={{ required: 'El correo es obligatorio', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Correo inválido' } }}
+        />
+        <View style={styles.divider} />
+        <Field
+          control={control}
+          name="password"
+          placeholder="Contraseña"
+          secureTextEntry
+          rules={{ required: 'La contraseña es obligatoria', minLength: { value: 8, message: 'Mínimo 8 caracteres' } }}
+        />
+        <View style={styles.divider} />
+        <Field
+          control={control}
+          name="phone"
+          placeholder="Teléfono"
+          keyboardType="phone-pad"
+          maxLength={8}
+          rules={{ required: 'El teléfono es obligatorio', pattern: { value: /^\d{8}$/, message: 'Debe tener exactamente 8 dígitos' } }}
+        />
+      </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Button title="Registrarme" onPress={handleSubmit(onSubmit)} loading={loading} />
+      <Button title="Registrarse" onPress={handleSubmit(onSubmit)} loading={loading} style={styles.submitBtn} />
 
-      <Button
-        title="¿Ya tienes cuenta? Inicia sesión"
-        variant="secondary"
-        onPress={() => navigation.navigate('Login')}
-        style={styles.loginBtn}
-      />
+      <View style={styles.footerRow}>
+        <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
+        <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>
+          Ingresa
+        </Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: COLORS.background,
-    padding: SPACING.lg,
+  container: { flexGrow: 1, backgroundColor: '#eaf5fc', padding: SPACING.lg, paddingTop: 60 },
+  title: { fontSize: 28, fontWeight: '800', color: COLORS.text, textAlign: 'center', marginBottom: SPACING.lg },
+  photoCircle: {
+    width: 110, height: 110, borderRadius: 55, backgroundColor: '#dcedf7',
+    alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginBottom: SPACING.lg,
+    overflow: 'hidden',
   },
-  title: {
-    fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    color: COLORS.text,
-    textAlign: 'center',
-    marginTop: SPACING.md,
+  photoImage: { width: '100%', height: '100%' },
+  card: {
+    backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm, marginBottom: SPACING.lg, ...SHADOWS.soft,
   },
-  subtitle: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.textLight,
-    textAlign: 'center',
-    marginBottom: SPACING.lg,
-  },
-  error: {
-    color: COLORS.error,
-    fontSize: FONT_SIZE.sm,
-    textAlign: 'center',
-    marginBottom: SPACING.md,
-  },
-  loginBtn: {
-    marginTop: SPACING.md,
-    marginBottom: SPACING.xl,
-  },
+  fieldWrap: { paddingVertical: 10 },
+  fieldInput: { fontSize: FONT_SIZE.md, color: COLORS.text, padding: 0 },
+  fieldError: { color: COLORS.error, fontSize: FONT_SIZE.xs, marginTop: 4 },
+  divider: { height: 1, backgroundColor: COLORS.border },
+  error: { color: COLORS.error, fontSize: FONT_SIZE.sm, textAlign: 'center', marginBottom: SPACING.md },
+  submitBtn: { marginBottom: SPACING.lg },
+  footerRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: SPACING.xl },
+  footerText: { color: COLORS.textLight, fontSize: FONT_SIZE.sm },
+  footerLink: { color: COLORS.primary, fontWeight: '700', fontSize: FONT_SIZE.sm },
 });
