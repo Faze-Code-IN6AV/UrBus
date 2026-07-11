@@ -1,21 +1,32 @@
 // src/navigation/MainTabs.jsx
+// Navegación inferior de 4 pestañas — replica el mockup: Pasajeros, Mapa,
+// Anuncios y Perfil, con el ícono activo resaltado en amarillo.
 import React from 'react';
+import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 
+import PassengersScreen from '../features/passengers/screens/PassengersScreen';
 import BusTrackingScreen from '../features/bus/screens/BusTrackingScreen';
 import PostsScreen from '../features/posts/screens/PostsScreen';
 import PostDetailScreen from '../features/posts/screens/PostDetailScreen';
-import MyStatusScreen from '../features/passenger-status/screens/MyStatusScreen';
 import ProfileScreen from '../features/profile/screens/ProfileScreen';
 
 import { COLORS } from '../shared/constants/theme';
 
 const Tab = createBottomTabNavigator();
+const PassengersStackNav = createNativeStackNavigator();
 const BusStackNav = createNativeStackNavigator();
 const PostsStackNav = createNativeStackNavigator();
-const MyStatusStackNav = createNativeStackNavigator();
+
+function PassengersStack() {
+  return (
+    <PassengersStackNav.Navigator screenOptions={{ headerShown: false }}>
+      <PassengersStackNav.Screen name="PassengersList" component={PassengersScreen} />
+    </PassengersStackNav.Navigator>
+  );
+}
 
 function BusStack() {
   return (
@@ -38,41 +49,47 @@ function PostsStack() {
   );
 }
 
-function MyStatusStack() {
-  return (
-    <MyStatusStackNav.Navigator screenOptions={{ headerShown: false }}>
-      <MyStatusStackNav.Screen name="MyStatus" component={MyStatusScreen} />
-    </MyStatusStackNav.Navigator>
-  );
-}
+const ICONS = {
+  Pasajeros: 'people-alt',
+  Mapa: 'map',
+  Anuncios: 'campaign',
+  Perfil: 'person',
+};
 
 export default function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
+        tabBarActiveTintColor: COLORS.accentDark,
         tabBarInactiveTintColor: COLORS.secondary,
         tabBarStyle: {
           backgroundColor: COLORS.surface,
-          height: 60,
+          height: 64,
+          paddingTop: 6,
           borderTopColor: COLORS.border,
         },
-        tabBarIcon: ({ color, size }) => {
-          const icons = {
-            Bus: 'directions-bus',
-            Anuncios: 'campaign',
-            'Mi Estado': 'how-to-reg',
-            Perfil: 'person',
-          };
-          return <MaterialIcons name={icons[route.name]} size={size} color={color} />;
-        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        tabBarIcon: ({ color, focused }) => (
+          <View
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: focused ? '#FFF3CC' : 'transparent',
+            }}
+          >
+            <MaterialIcons name={ICONS[route.name]} size={22} color={color} />
+          </View>
+        ),
       })}
     >
-      <Tab.Screen name="Bus" component={BusStack} />
+      <Tab.Screen name="Pasajeros" component={PassengersStack} />
+      <Tab.Screen name="Mapa" component={BusStack} />
       <Tab.Screen name="Anuncios" component={PostsStack} />
-      <Tab.Screen name="Mi Estado" component={MyStatusStack} />
-      <Tab.Screen name="Perfil" component={ProfileScreen} options={{ headerShown: true }} />
+      <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
