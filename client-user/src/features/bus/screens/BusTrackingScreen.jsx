@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
-import MapView, { Marker } from 'react-native-maps';
+import OSMMapView from '../components/OSMMapView';
 import { useBusTracking } from '../hooks/useBusTracking';
 import { EmptyState } from '../../../shared/components/common/Common';
 import useAuthStore from '../../../shared/store/authStore';
@@ -63,15 +63,30 @@ export default function BusTrackingScreen() {
           <EmptyState message="Esperando ubicación del bus" icon="directions-bus" />
         </View>
       ) : (
-        <MapView style={styles.map} initialRegion={region} region={region}>
-          {coords ? (
-            <Marker
-              coordinate={{ latitude: coords.lat, longitude: coords.lng }}
-              title="Bus UrBus"
-              description="Ubicación en tiempo real"
-            />
-          ) : null}
-        </MapView>
+        <OSMMapView
+          style={styles.map}
+          region={region}
+          destination={
+            coords
+              ? {
+                  latitude: DEFAULT_REGION.latitude,
+                  longitude: DEFAULT_REGION.longitude,
+                  title: 'Kinal',
+                  description: 'Destino del bus',
+                }
+              : null
+          }
+          marker={
+            coords
+              ? {
+                  latitude: coords.lat,
+                  longitude: coords.lng,
+                  title: 'Bus UrBus',
+                  description: 'Ubicación en tiempo real',
+                }
+              : null
+          }
+        />
       )}
 
       {isManager ? (

@@ -1,6 +1,7 @@
 import pkg from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 import QRCode from 'qrcode';
+import { existsSync } from 'fs';
 
 const { Client, LocalAuth } = pkg;
 
@@ -8,14 +9,53 @@ let isReady = false;
 let currentQR = null;
 let client = null;
 
+// Rutas comunes de Chrome/Chromium por sistema operativo.
+// Se usa la primera que exista en el equipo donde corra el servicio.
+const CHROME_PATHS_BY_PLATFORM = {
+  darwin: [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  ],
+  win32: [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  ],
+  linux: [
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+  ],
+};
+
+const resolveChromeExecutablePath = () => {
+  // 1. Permitir override explícito por variable de entorno (recomendado en Docker/CI)
+  const envPath = process.env.CHROME_EXECUTABLE_PATH || process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (envPath && existsSync(envPath)) return envPath;
+
+  // 2. Autodetección según el sistema operativo actual
+  const candidates = CHROME_PATHS_BY_PLATFORM[process.platform] || [];
+  const found = candidates.find((path) => existsSync(path));
+
+  if (!found) {
+    console.warn(
+      `WhatsApp | No se encontró Chrome/Chromium instalado para la plataforma "${process.platform}". ` +
+      'Define la variable de entorno CHROME_EXECUTABLE_PATH apuntando a tu ejecutable de Chrome o Chromium.'
+    );
+  }
+
+  return found;
+};
+
 const createClient = () => {
+  const executablePath = resolveChromeExecutablePath();
+
   const c = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      // executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Windows
-      executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Mac
+      ...(executablePath ? { executablePath } : {}),
     }
   });
 
