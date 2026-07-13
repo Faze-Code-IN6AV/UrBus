@@ -73,6 +73,8 @@ export function useBusTracking() {
     watchRef.current?.remove?.();
     watchRef.current = null;
     setRouteActive(false);
+    setCoords(null);
+    setArrived(false);
   }, []);
 
   return { coords, arrived, connected, connecting, error, routeActive, resetArrived, startRoute, endRoute };
