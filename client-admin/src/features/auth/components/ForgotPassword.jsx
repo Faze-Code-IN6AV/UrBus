@@ -1,8 +1,8 @@
 import { useState } from "react";
 import urbuLogo from "../../../assets/img/UrBus-logo.png";
 import { Spinner } from "./Spinner.jsx";
-// import { forgotPassword } from "../../../shared/api";
-// import { showError, showSuccess } from "../../../shared/utils/toast.js";
+import { forgotPassword } from "../../../shared/api";
+import { showError, showSuccess } from "../../../shared/utils/toast.js";
  
 const EmailIcon = () => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
@@ -16,28 +16,28 @@ export const ForgotPassword = ({ onNavigate }) => {
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
  
-    // const handleSubmit = async () => {
-    //     if (!email.trim()) {
-    //         showError("Por favor ingresa tu correo electrónico.");
-    //         return;
-    //     }
+    const handleSubmit = async () => {
+        if (!email.trim()) {
+            showError("Por favor ingresa tu correo electrónico.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await forgotPassword(email.trim());
+            setSent(true);
+            showSuccess("Si el correo existe, recibirás instrucciones.");
+        } catch (err) {
+            const message = err.response?.data?.message || "Error al enviar el correo de recuperación.";
+            showError(message);
+        } finally {
+            setLoading(false);
+        }
+    };
  
-    //     setLoading(true);
-    //     try {
-    //         await forgotPassword(email.trim());
-    //         setSent(true);
-    //         showSuccess("Si el correo existe, recibirás instrucciones.");
-    //     } catch (err) {
-    //         const message = err.response?.data?.message || "Error al enviar el correo de recuperación.";
-    //         showError(message);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
- 
-    // const handleKeyDown = (e) => {
-    //     if (e.key === "Enter") handleSubmit();
-    // };
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") handleSubmit();
+    };
  
     return (
         <>
@@ -66,18 +66,19 @@ export const ForgotPassword = ({ onNavigate }) => {
                 placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                // onKeyDown={handleKeyDown}
+                onKeyDown={handleKeyDown}
                 className="flex-1 outline-none text-gray-700 text-sm bg-transparent placeholder-gray-400"
                 />
             </div>
  
             <button
-                // onClick={handleSubmit}
-                // disabled={loading}
-                className="w-full py-3.5 rounded-2xl font-semibold text-white text-base shadow-md mt-4 flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full py-3.5 rounded-2xl font-semibold text-white text-base shadow-md mt-4 flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ background: "linear-gradient(135deg,#f5c518 0%,#e6a800 100%)" }}
             >
-                Enviar instrucciones
+                {loading && <Spinner />}
+                {loading ? "Enviando..." : "Enviar instrucciones"}
             </button>
             </>
         )}
