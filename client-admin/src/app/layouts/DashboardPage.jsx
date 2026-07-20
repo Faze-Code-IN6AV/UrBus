@@ -5,6 +5,7 @@ import { styles } from "../../styles/dashboard.js";
 import { WhatsAppBubble } from "../../features/whatsapp/components/WhatsAppBubble.jsx";
 import { ProfileModal } from "../../features/auth/components/ProfileModal.jsx";
 import userDefault from "../../assets/img/user.png";
+import urBusLogo from "../../assets/img/UrBus-logo.png";
 
 const authBaseUrl = import.meta.env.VITE_AUTH_URL?.replace(/\/api\/v1\/?$/, '');
 
@@ -152,7 +153,17 @@ export const DashboardPage = () => {
         }}
       >
         <div style={styles.logoArea}>
-          <div style={styles.logoBadge}>U</div>
+          <img
+            src={urBusLogo}
+            alt="UrBus logo"
+            style={{
+              width: 42,
+              height: 42,
+              objectFit: "contain",
+              borderRadius: 10,
+              flexShrink: 0,
+            }}
+          />
           <span style={styles.logoText}>UrBus</span>
         </div>
 
@@ -280,7 +291,7 @@ export const DashboardPage = () => {
         </main>
       </div>
 
-      {user?.role === "ADMIN_ROLE" && <WhatsAppBubble />}
+      {['ADMIN_ROLE', 'DRIVER_ROLE'].includes(user?.role) && <WhatsAppBubble />}
 
       {/* Modal de perfil */}
       {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}

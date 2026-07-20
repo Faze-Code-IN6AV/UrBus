@@ -1,10 +1,5 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0
-
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
 
 COPY AuthenticationService.sln ./
 COPY src/AuthenticationService.Domain/ src/AuthenticationService.Domain/
@@ -13,13 +8,13 @@ COPY src/AuthenticationService.Application/ src/AuthenticationService.Applicatio
 COPY src/AuthenticationService.Api/ src/AuthenticationService.Api/
 
 RUN dotnet restore AuthenticationService.sln
+RUN dotnet publish src/AuthenticationService.Api -c Release -o /app/publish --no-restore
 
-ENV ASPNETCORE_ENVIRONMENT=Development
-ENV ASPNETCORE_URLS=http://+:5166
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
 
-ENV DOTNET_USE_POLLING_FILE_WATCHER=1
-ENV DOTNET_WATCH_RESTART_ON_RUDE_EDIT=1
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE 8080
 
-EXPOSE 5166
-
-CMD ["dotnet", "watch", "--project", "src/AuthenticationService.Api", "run", "--urls", "http://+:5166"]
+ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet AuthenticationService.Api.dll"]

@@ -14,12 +14,13 @@ import PassengerFormModal from '../components/PassengerFormModal';
 import ConfirmModal from '../../../shared/components/common/ConfirmModal';
 import Button from '../../../shared/components/common/Button';
 import { Card, EmptyState, LoadingSpinner } from '../../../shared/components/common/Common';
-import { COLORS, SPACING, FONT_SIZE, MANAGER_ROLES } from '../../../shared/constants/theme';
+import { COLORS, SPACING, FONT_SIZE, MANAGER_ROLES, ROLES } from '../../../shared/constants/theme';
 
 function ManagerPassengersView() {
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.role === 'ADMIN_ROLE';
+  const isAdmin = user?.role === ROLES.ADMIN;
   const canCreate = MANAGER_ROLES.includes(user?.role); // ADMIN o DRIVER
+  const canToggleStatus = user?.role === ROLES.ADMIN || user?.role === ROLES.DRIVER;
 
   const { passengers, loading, error, presentCount, fetchPassengers, toggleStatus, addPassenger, removePassenger } =
     usePassengers();
@@ -75,7 +76,7 @@ function ManagerPassengersView() {
             renderItem={({ item }) => (
               <PassengerListItem
                 passenger={item}
-                canToggle
+                canToggle={canToggleStatus}
                 canDelete={isAdmin}
                 onToggle={(p) => toggleStatus(p._id, p.status)}
                 onDelete={(p) => setDeleteTarget(p)}
@@ -149,7 +150,8 @@ function MyStatusView() {
 
 export default function PassengersScreen() {
   const user = useAuthStore((state) => state.user);
-  const isManager = MANAGER_ROLES.includes(user?.role);
+  const isPassengerRole = user?.role === ROLES.PASSENGER;
+  const isManager = MANAGER_ROLES.includes(user?.role) || isPassengerRole;
   return isManager ? <ManagerPassengersView /> : <MyStatusView />;
 }
 

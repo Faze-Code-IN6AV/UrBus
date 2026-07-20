@@ -93,7 +93,7 @@ export const PostListPage = () => {
                         margin: 0, fontSize: 22, fontWeight: 800,
                         color: '#111827', letterSpacing: '-0.3px',
                     }}>
-                        {isDriver ? 'Mis Anuncios' : 'Anuncios del Bus'}
+                        Anuncios del Bus
                     </h1>
                     <p style={{ margin: '3px 0 0', fontSize: 13, color: '#9ca3af' }}>
                         {loading
