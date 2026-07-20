@@ -1,11 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY AuthenticationService.sln ./
-COPY src/AuthenticationService.Domain/ src/AuthenticationService.Domain/
-COPY src/AuthenticationService.Persistence/ src/AuthenticationService.Persistence/
-COPY src/AuthenticationService.Application/ src/AuthenticationService.Application/
-COPY src/AuthenticationService.Api/ src/AuthenticationService.Api/
+COPY authentication-service/AuthenticationService.sln ./
+COPY authentication-service/src/AuthenticationService.Domain/ src/AuthenticationService.Domain/
+COPY authentication-service/src/AuthenticationService.Persistence/ src/AuthenticationService.Persistence/
+COPY authentication-service/src/AuthenticationService.Application/ src/AuthenticationService.Application/
+COPY authentication-service/src/AuthenticationService.Api/ src/AuthenticationService.Api/
 
 RUN dotnet restore AuthenticationService.sln
 RUN dotnet publish src/AuthenticationService.Api -c Release -o /app/publish --no-restore
