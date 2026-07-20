@@ -45,7 +45,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-            "https://client-admin-ojvw.onrender.com"
+            "https://client-admin-ojvw.onrender.com",
+            "http://localhost:5173",
+            "https://localhost:5173",
+            "http://localhost:3000",
+            "http://localhost:3001"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
