@@ -31,13 +31,13 @@ export default function PostsScreen({ navigation }) {
   const [formModal, setFormModal] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  useEffect(() => { fetchPosts(user?.role === 'DRIVER_ROLE'); }, [fetchPosts, user?.role]);
+  useEffect(() => { fetchPosts(false); }, [fetchPosts]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchPosts(user?.role === 'DRIVER_ROLE');
+    await fetchPosts(false);
     setRefreshing(false);
-  }, [fetchPosts, user?.role]);
+  }, [fetchPosts]);
 
   const handleFormSubmit = async (formData) => {
     const result = formModal === 'create' ? await addPost(formData) : await editPost(formModal.post.id, formData);

@@ -8,7 +8,7 @@ const CENTER_COORDS = { lat: 14.6245, lng: -90.5366 };
 
 export const LocationPage = () => {
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.role === 'ADMIN_ROLE';
+  const canManageRoute = user?.role === 'ADMIN_ROLE' || user?.role === 'DRIVER_ROLE';
 
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -209,7 +209,7 @@ export const LocationPage = () => {
           <div>
             <h1 style={styles.pageTitle}>Mapa a Tiempo Real</h1>
             <p style={styles.pageSubtitle}>
-              {isAdmin
+              {canManageRoute
                 ? 'Gestiona y monitorea la ruta del bus'
                 : 'Sigue la ubicación del bus en tiempo real'}
             </p>
@@ -235,7 +235,7 @@ export const LocationPage = () => {
 
         <div ref={mapRef} style={styles.mapContainer} />
 
-        {isAdmin && (
+        {canManageRoute && (
           <div style={styles.adminActions}>
             <button
               style={{

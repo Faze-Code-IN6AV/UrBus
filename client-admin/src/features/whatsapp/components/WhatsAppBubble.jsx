@@ -82,8 +82,8 @@ export const WhatsAppBubble = () => {
 
   const panelRef = useRef(null);
 
-  // Solo admins
-  if (user?.role !== 'ADMIN_ROLE') return null;
+  // Administradores y conductores pueden usar WhatsApp desde el panel
+  if (!['ADMIN_ROLE', 'DRIVER_ROLE'].includes(user?.role)) return null;
 
   const showFeedback = (msg, ok = true) => {
     setFeedback({ msg, ok });

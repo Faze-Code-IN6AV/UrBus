@@ -21,10 +21,9 @@ export const usePosts = () => {
     const clearError   = usePostStore((s) => s.clearError);
 
     const refetch = useCallback(() => {
+        fetchPosts();
         if (isDriver) {
             fetchMyPosts();
-        } else {
-            fetchPosts();
         }
     }, [isDriver, fetchPosts, fetchMyPosts]);
 
@@ -32,10 +31,10 @@ export const usePosts = () => {
         refetch();
     }, [refetch]);
 
-    // Drivers ven solo sus posts; admins ven todos
-    const activePosts = isDriver
-        ? myPosts.filter((p) => !p.isDeleted)
-        : (Array.isArray(posts) ? posts : []);
+    // Conductores y admins ven los anuncios existentes; los conductores solo pueden editar/eliminar los suyos.
+    const activePosts = Array.isArray(posts)
+        ? posts.filter((p) => !p.isDeleted)
+        : [];
 
     return {
         posts: activePosts,
