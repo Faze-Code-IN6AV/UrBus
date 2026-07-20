@@ -11,3 +11,9 @@ export const updateUserRole = async (userId, roleName) => {
         params: { roleName },
     });
 };
+
+// PUT /api/v1/users/:userId/verify-email — requiere ADMIN_ROLE
+// Verificación manual del email, alternativa al envío por SMTP (que no funciona en Render)
+export const verifyUserEmail = async (userId) => {
+    return await axiosAuth.put(`/users/${userId}/verify-email`);
+};

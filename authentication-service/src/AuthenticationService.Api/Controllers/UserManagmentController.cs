@@ -43,6 +43,20 @@ public class UserManagementController(IUserManagementService userManagementServi
         return Ok(roles);
     }
 
+    /// <summary>Verificar manualmente el email de un usuario (alternativa administrativa al envío por SMTP)</summary>
+    [Authorize(Roles = "ADMIN_ROLE")]
+    [HttpPut("{userId}/verify-email")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> VerifyUserEmail(string userId)
+    {
+        var result = await userManagementService.VerifyUserEmailAsync(userId);
+        return Ok(result);
+    }
+
     /// <summary>Listar usuarios por rol</summary>
     [Authorize(Roles = "ADMIN_ROLE")]
     [HttpGet("by-role")]

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllUsers, updateUserRole } from '../../../shared/api/users.js';
+import { getAllUsers, updateUserRole, verifyUserEmail } from '../../../shared/api/users.js';
 import { showSuccess, showError } from '../../../shared/utils/toast.js';
 
 export const useUserStore = create((set, get) => ({
@@ -38,6 +38,21 @@ export const useUserStore = create((set, get) => ({
         } catch (err) {
             set({ users: snapshot });
             const msg = err.response?.data?.message || 'Error al actualizar el rol';
+            showError(msg);
+            return { success: false, error: msg };
+        }
+    },
+
+    verifyEmail: async (userId) => {
+        try {
+            const { data: updated } = await verifyUserEmail(userId);
+            set((state) => ({
+                users: state.users.map((u) => (u.id === userId ? { ...u, ...updated } : u)),
+            }));
+            showSuccess('Email verificado correctamente');
+            return { success: true };
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Error al verificar el email';
             showError(msg);
             return { success: false, error: msg };
         }
