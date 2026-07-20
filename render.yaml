@@ -1,0 +1,153 @@
+databases:
+  - name: urbus-postgres
+    plan: free
+    databaseName: urbus_users
+    user: urbus
+
+services:
+  - type: web
+    name: urbus-auth-service
+    runtime: docker
+    dockerfilePath: ./dockerfiles/Dockerfile.auth-service
+    dockerContext: ./authentication-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: urbus-postgres
+          property: connectionString
+      - key: CloudinarySettings__CloudName
+        sync: false
+      - key: CloudinarySettings__ApiKey
+        sync: false
+      - key: CloudinarySettings__ApiSecret
+        sync: false
+      - key: CloudinarySettings__BaseUrl
+        sync: false
+      - key: CloudinarySettings__Folder
+        sync: false
+      - key: CloudinarySettings__DefaultAvatarPath
+        sync: false
+      - key: SmtpSettings__Host
+        sync: false
+      - key: SmtpSettings__Port
+        sync: false
+      - key: SmtpSettings__Username
+        sync: false
+      - key: SmtpSettings__Password
+        sync: false
+      - key: SmtpSettings__FromEmail
+        sync: false
+      - key: SmtpSettings__FromName
+        sync: false
+      - key: AppSettings__FrontendUrl
+        sync: false
+      - key: JwtSettings__SecretKey
+        sync: false
+      - key: JwtSettings__Issuer
+        value: UrBus
+      - key: JwtSettings__Audience
+        value: UrBus
+      - key: JwtSettings__ExpirationMinutes
+        value: "60"
+      - key: Security__AllowedOrigins__0
+        sync: false
+      - key: Security__AdminAllowedOrigins__0
+        sync: false
+
+  - type: web
+    name: urbus-location-service
+    runtime: docker
+    dockerfilePath: ./dockerfiles/Dockerfile.location-service
+    dockerContext: ./location-service
+    plan: free
+    healthCheckPath: /urbus/v1/health
+    envVars:
+      - key: URI_MONGODB
+        sync: false
+
+  - type: web
+    name: urbus-notification-service
+    runtime: docker
+    dockerfilePath: ./dockerfiles/Dockerfile.notification-service
+    dockerContext: ./notification-service
+    plan: starter
+    healthCheckPath: /urbus/v1/health
+    disk:
+      name: whatsapp-session
+      mountPath: /app/.wwebjs_auth
+      sizeGB: 1
+    envVars:
+      - key: URI_MONGODB
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 1h
+      - key: JWT_ISSUER
+        value: UrBus
+      - key: JWT_AUDIENCE
+        value: UrBus
+
+  - type: web
+    name: urbus-passenger-service
+    runtime: docker
+    dockerfilePath: ./dockerfiles/Dockerfile.passenger-service
+    dockerContext: ./passenger-service
+    plan: free
+    healthCheckPath: /urbus/v1/health
+    envVars:
+      - key: URI_MONGODB
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 1h
+      - key: JWT_ISSUER
+        value: UrBus
+      - key: JWT_AUDIENCE
+        value: UrBus
+
+  - type: web
+    name: urbus-post-service
+    runtime: docker
+    dockerfilePath: ./dockerfiles/Dockerfile.post-service
+    dockerContext: ./post-service
+    plan: free
+    healthCheckPath: /urbus/v1/health
+    envVars:
+      - key: URI_MONGODB
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 1h
+      - key: JWT_ISSUER
+        value: UrBus
+      - key: JWT_AUDIENCE
+        value: UrBus
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+  - type: web
+    name: urbus-client-admin
+    runtime: docker
+    dockerfilePath: ./dockerfiles/Dockerfile.client-admin
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: VITE_LOCATION_SERVICE_URL
+        sync: false
+      - key: VITE_AUTH_URL
+        sync: false
+      - key: VITE_POST_URL
+        sync: false
+      - key: VITE_PASSENGER_URL
+        sync: false
+      - key: VITE_NOTIFICATION_URL
+        sync: false
