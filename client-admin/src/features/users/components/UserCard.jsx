@@ -61,7 +61,9 @@ function RoleBadge({ role }) {
 
 export const UserCard = ({ user, currentUserId }) => {
     const changeUserRole = useUserStore((s) => s.changeUserRole);
+    const verifyEmail = useUserStore((s) => s.verifyEmail);
     const [updating, setUpdating] = useState(false);
+    const [verifying, setVerifying] = useState(false);
 
     const { id, name, surname, email, role, status, isEmailVerified } = user;
     const isSelf = String(id) === String(currentUserId);
@@ -80,6 +82,17 @@ export const UserCard = ({ user, currentUserId }) => {
         setUpdating(true);
         await changeUserRole(id, newRole);
         setUpdating(false);
+    };
+
+    const handleVerifyEmail = async () => {
+        const confirmed = window.confirm(
+            `¿Confirmas que quieres verificar manualmente el email de ${name ?? ''} ${surname ?? ''}`.trim() + '?'
+        );
+        if (!confirmed) return;
+
+        setVerifying(true);
+        await verifyEmail(id);
+        setVerifying(false);
     };
 
     return (
@@ -118,6 +131,27 @@ export const UserCard = ({ user, currentUserId }) => {
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: '#f59e0b' }}>Email sin verificar</span>
                 )}
             </div>
+
+            {!isEmailVerified && (
+                <button
+                    onClick={handleVerifyEmail}
+                    disabled={verifying}
+                    title="Verificar email manualmente"
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '7px 12px', borderRadius: 9,
+                        border: '1.5px solid #f59e0b', background: verifying ? '#fef3c7' : '#fff',
+                        color: '#b45309', fontSize: 12, fontWeight: 700,
+                        cursor: verifying ? 'not-allowed' : 'pointer',
+                        opacity: verifying ? 0.7 : 1, flexShrink: 0, whiteSpace: 'nowrap',
+                    }}
+                >
+                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {verifying ? 'Verificando...' : 'Verificar'}
+                </button>
+            )}
 
             <select
                 value={role ?? ''}

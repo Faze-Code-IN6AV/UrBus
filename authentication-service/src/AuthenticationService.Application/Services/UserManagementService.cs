@@ -7,7 +7,11 @@ using AuthService.Application.Validators;
 
 namespace AuthService.Application.Services;
 
-public class UserManagementService(IUserRepository users, IRoleRepository roles, ICloudinaryService cloudinary) : IUserManagementService
+public class UserManagementService(
+    IUserRepository users,
+    IRoleRepository roles,
+    ICloudinaryService cloudinary,
+    IEmailService emailService) : IUserManagementService
 {
     public async Task<IReadOnlyList<UserResponseDto>> GetAllUsersAsync()
     {
@@ -153,6 +157,63 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles,
             IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
+        };
+    }
+
+    // Verificación manual de email por parte de un administrador.
+    // Alternativa a la verificación por correo (SMTP), útil cuando el envío de emails
+    // no está disponible en el entorno de despliegue (ej. Render).
+    public async Task<UserResponseDto> VerifyUserEmailAsync(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("Invalid userId", nameof(userId));
+
+        var user = await users.GetByIdAsync(userId);
+
+        if (user.UserEmail == null)
+            throw new InvalidOperationException("El usuario no tiene información de verificación de email");
+
+        if (user.UserEmail.EmailVerified)
+            throw new InvalidOperationException("El email de este usuario ya ha sido verificado");
+
+        user.UserEmail.EmailVerified = true;
+        user.UserEmail.EmailVerificationToken = null;
+        user.UserEmail.EmailVerificationTokenExpiry = null;
+        user.Status = true;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        var updatedUser = await users.UpdateUserAsync(user);
+
+        // Enviar email de bienvenida en background (best-effort, no bloquea la respuesta)
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await emailService.SendWelcomeEmailAsync(updatedUser.Email, updatedUser.Username);
+            }
+            catch
+            {
+                // Best-effort: si el SMTP falla (como en el despliegue de Render),
+                // la verificación administrativa ya quedó aplicada de todos modos.
+            }
+        });
+
+        var role = updatedUser.UserRoles.FirstOrDefault()?.Role?.Name ?? string.Empty;
+
+        return new UserResponseDto
+        {
+            Id = updatedUser.Id,
+            Name = updatedUser.Name,
+            Surname = updatedUser.Surname,
+            Username = updatedUser.Username,
+            Email = updatedUser.Email,
+            ProfilePicture = cloudinary.GetFullImageUrl(updatedUser.UserProfile?.ProfilePicture ?? string.Empty),
+            Phone = updatedUser.UserProfile?.Phone ?? string.Empty,
+            Role = role,
+            Status = updatedUser.Status,
+            IsEmailVerified = updatedUser.UserEmail?.EmailVerified ?? false,
+            CreatedAt = updatedUser.CreatedAt,
+            UpdatedAt = updatedUser.UpdatedAt
         };
     }
 }
