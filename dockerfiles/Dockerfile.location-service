@@ -4,10 +4,10 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10 --activate
 
-COPY package.json pnpm-lock.yaml ./
+COPY location-service/package.json location-service/pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 
-COPY . .
+COPY location-service/ .
 
 ENV NODE_ENV=production
 
