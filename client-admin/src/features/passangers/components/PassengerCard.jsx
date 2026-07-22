@@ -126,112 +126,121 @@ export const PassengerCard = ({ passenger, onEdit, onDelete }) => {
 
     return (
         <div style={{
-            display: 'flex', alignItems: 'center', gap: 14,
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 14px',
             padding: '14px 18px',
             background: '#fff',
         }}>
-            <PassengerAvatar name={name} />
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                flex: '1 1 200px', minWidth: 0,
+            }}>
+                <PassengerAvatar name={name} />
 
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                    margin: 0, fontWeight: 700, fontSize: 15.5,
-                    color: '#1a1a2e', lineHeight: 1.25,
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                }}>
-                    {name}
-                </p>
-                <p style={{
-                    margin: '3px 0 0', fontSize: 12.5, color: '#9ca3af',
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                }}>
-                    {address ?? `ID: ${_id?.slice(-6)}`}
-                </p>
-                {showAbsenceReason && (
+                <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
-                        margin: '4px 0 0', fontSize: 11.5, fontWeight: 700, color: '#b45309',
-                        display: 'flex', alignItems: 'center', gap: 5,
+                        margin: 0, fontWeight: 700, fontSize: 15.5,
+                        color: '#1a1a2e', lineHeight: 1.25,
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     }}>
-                        <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="8" x2="12" y2="12" strokeLinecap="round" />
-                            <line x1="12" y1="16" x2="12.01" y2="16" strokeLinecap="round" />
-                        </svg>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {absenceReasonLabel}
-                            {absenceReasonNote ? `: ${absenceReasonNote}` : ''}
-                        </span>
-                        {canToggleStatus && (
-                            <button
-                                onClick={() => clearPassengerAbsenceReason(_id)}
-                                title="Quitar motivo de ausencia"
-                                style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    width: 15, height: 15, borderRadius: '50%', border: 'none',
-                                    background: 'rgba(180,83,9,0.12)', color: '#b45309',
-                                    cursor: 'pointer', flexShrink: 0, padding: 0,
-                                }}
-                            >
-                                <svg width="9" height="9" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                    <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" />
-                                    <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" />
-                                </svg>
-                            </button>
-                        )}
+                        {name}
                     </p>
-                )}
+                    <p style={{
+                        margin: '3px 0 0', fontSize: 12.5, color: '#9ca3af',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                        {address ?? `ID: ${_id?.slice(-6)}`}
+                    </p>
+                    {showAbsenceReason && (
+                        <p style={{
+                            margin: '4px 0 0', fontSize: 11.5, fontWeight: 700, color: '#b45309',
+                            display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap',
+                        }}>
+                            <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" strokeLinecap="round" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" strokeLinecap="round" />
+                            </svg>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {absenceReasonLabel}
+                                {absenceReasonNote ? `: ${absenceReasonNote}` : ''}
+                            </span>
+                            {canToggleStatus && (
+                                <button
+                                    onClick={() => clearPassengerAbsenceReason(_id)}
+                                    title="Quitar motivo de ausencia"
+                                    style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: 15, height: 15, borderRadius: '50%', border: 'none',
+                                        background: 'rgba(180,83,9,0.12)', color: '#b45309',
+                                        cursor: 'pointer', flexShrink: 0, padding: 0,
+                                    }}
+                                >
+                                    <svg width="9" height="9" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                        <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" />
+                                        <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" />
+                                    </svg>
+                                </button>
+                            )}
+                        </p>
+                    )}
+                </div>
             </div>
 
-            {canToggleStatus && (
-                <button
-                    onClick={() => setShowAbsenceModal(true)}
-                    title="Registrar motivo de ausencia"
-                    style={{
-                        padding: '7px 12px', borderRadius: 9,
-                        border: '1.5px solid #e5e7eb', background: '#fff',
-                        color: '#374151', fontSize: 12, fontWeight: 600,
-                        cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
-                    }}
-                >
-                    ¿Motivo de ausencia?
-                </button>
-            )}
+            <div style={{
+                display: 'flex', flexWrap: 'wrap', alignItems: 'center',
+                gap: 8, marginLeft: 'auto', justifyContent: 'flex-end',
+            }}>
+                {canToggleStatus && (
+                    <button
+                        onClick={() => setShowAbsenceModal(true)}
+                        title="Registrar motivo de ausencia"
+                        style={{
+                            padding: '7px 12px', borderRadius: 9,
+                            border: '1.5px solid #e5e7eb', background: '#fff',
+                            color: '#374151', fontSize: 12, fontWeight: 600,
+                            cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
+                        }}
+                    >
+                        ¿Motivo de ausencia?
+                    </button>
+                )}
 
-            <Checkbox
-                checked={isPresent}
-                onChange={canToggleStatus ? () => toggleStatus(_id) : undefined}
-                title={canToggleStatus ? (isPresent ? 'Marcar como ausente' : 'Marcar como presente') : 'Solo el conductor o un administrador pueden marcar asistencia'}
-                disabled={!canToggleStatus}
-            />
+                <Checkbox
+                    checked={isPresent}
+                    onChange={canToggleStatus ? () => toggleStatus(_id) : undefined}
+                    title={canToggleStatus ? (isPresent ? 'Marcar como ausente' : 'Marcar como presente') : 'Solo el conductor o un administrador pueden marcar asistencia'}
+                    disabled={!canToggleStatus}
+                />
 
-            {canViewInfo && (
-                <IconBtn onClick={handleViewInfo} title="Ver información de contacto" color="#005691">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="16" x2="12" y2="12" strokeLinecap="round" />
-                        <line x1="12" y1="8" x2="12.01" y2="8" strokeLinecap="round" />
-                    </svg>
-                </IconBtn>
-            )}
-
-            {isAdmin && (
-                <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
-                    <IconBtn onClick={() => onEdit(passenger)} title="Editar" color="#005691">
+                {canViewInfo && (
+                    <IconBtn onClick={handleViewInfo} title="Ver información de contacto" color="#005691">
                         <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="16" x2="12" y2="12" strokeLinecap="round" />
+                            <line x1="12" y1="8" x2="12.01" y2="8" strokeLinecap="round" />
                         </svg>
                     </IconBtn>
-                    <IconBtn onClick={() => onDelete(passenger)} title="Eliminar" color="#ef4444">
-                        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                            <path d="M10 11v6M14 11v6" strokeLinecap="round"/>
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                        </svg>
-                    </IconBtn>
-                </div>
-            )}
+                )}
+
+                {isAdmin && (
+                    <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                        <IconBtn onClick={() => onEdit(passenger)} title="Editar" color="#005691">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </IconBtn>
+                        <IconBtn onClick={() => onDelete(passenger)} title="Eliminar" color="#ef4444">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                <path d="M10 11v6M14 11v6" strokeLinecap="round"/>
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                            </svg>
+                        </IconBtn>
+                    </div>
+                )}
+            </div>
 
             {showInfo && (
                 <AccountInfoModal
