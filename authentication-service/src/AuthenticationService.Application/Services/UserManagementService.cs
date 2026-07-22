@@ -216,4 +216,32 @@ public class UserManagementService(
             UpdatedAt = updatedUser.UpdatedAt
         };
     }
+
+    // Información de contacto de una cuenta (nombre, apellido, usuario, teléfono, email, fecha de creación).
+    // Usado por ADMIN y DRIVER para ver los datos de una cuenta vinculada a un pasajero
+    // (ej. para poder llamar a un pasajero ausente).
+    public async Task<UserResponseDto> GetUserByIdAsync(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("Invalid userId", nameof(userId));
+
+        var user = await users.GetByIdAsync(userId);
+        var role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? string.Empty;
+
+        return new UserResponseDto
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Surname = user.Surname,
+            Username = user.Username,
+            Email = user.Email,
+            ProfilePicture = cloudinary.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
+            Phone = user.UserProfile?.Phone ?? string.Empty,
+            Role = role,
+            Status = user.Status,
+            IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
+        };
+    }
 }

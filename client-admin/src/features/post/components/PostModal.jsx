@@ -9,6 +9,7 @@ export const PostModal = ({ post, onClose }) => {
 
     const [title, setTitle] = useState(post?.title ?? '');
     const [content, setContent] = useState(post?.content ?? '');
+    const [isUrgent, setIsUrgent] = useState(post?.isUrgent ?? false);
     const [imageFile, setImageFile] = useState(null);
     const [preview, setPreview] = useState(post?.imageUrl ?? null);
     const fileRef = useRef(null);
@@ -26,6 +27,7 @@ export const PostModal = ({ post, onClose }) => {
         const fd = new FormData();
         fd.append('title', title.trim());
         fd.append('content', content.trim());
+        fd.append('isUrgent', String(isUrgent));
         if (imageFile) fd.append('image', imageFile);
 
         const result = isEdit
@@ -108,6 +110,31 @@ export const PostModal = ({ post, onClose }) => {
                                 fontFamily: 'inherit', lineHeight: 1.5,
                             }}
                         />
+                    </div>
+
+                    <div>
+                        <label
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 10,
+                                padding: '10px 14px', borderRadius: 10, cursor: 'pointer',
+                                border: `1.5px solid ${isUrgent ? '#ef4444' : '#e5e7eb'}`,
+                                background: isUrgent ? '#fef2f2' : '#fff',
+                                transition: 'all 0.15s',
+                            }}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={isUrgent}
+                                onChange={(e) => setIsUrgent(e.target.checked)}
+                                style={{ width: 17, height: 17, accentColor: '#ef4444', cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: 13.5, fontWeight: 700, color: isUrgent ? '#b91c1c' : '#374151' }}>
+                                Marcar como "Urgente"
+                            </span>
+                        </label>
+                        <p style={{ margin: '6px 0 0', fontSize: 11.5, color: '#9ca3af' }}>
+                            Aparecerá destacado y activará un aviso en el menú lateral hasta que se revise.
+                        </p>
                     </div>
 
                     <div>

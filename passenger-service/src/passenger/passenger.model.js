@@ -20,6 +20,22 @@ const passengerSchema = new Schema(
         default: 'AUSENT'
     },
 
+    absenceReason: {
+        type: String,
+        enum: ['SALUD', 'EMERGENCIA', 'EXTRACURRICULAR', 'OTRO', null],
+        default: null
+    },
+
+    absenceReasonNote: {
+        type: String,
+        default: null
+    },
+
+    absenceReasonAt: {
+        type: Date,
+        default: null
+    },
+
     isActive: {
         type: Boolean,
         default: true

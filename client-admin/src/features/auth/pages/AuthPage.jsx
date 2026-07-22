@@ -46,6 +46,15 @@ export const AuthPage = () => {
             <div className="relative z-10 flex flex-col items-center px-7 pt-10 pb-10 gap-1 flex-1">
                 {views[view]}
             </div>
+            <span
+                style={{
+                    position: 'absolute', bottom: 10, left: 14,
+                    fontSize: 11, color: '#6b7280', opacity: 0.8,
+                    userSelect: 'none', pointerEvents: 'none',
+                }}
+            >
+                v0.5.6
+            </span>
             </div>
         </div>
         </div>

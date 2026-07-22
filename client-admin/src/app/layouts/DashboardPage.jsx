@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation, NavLink } from "react-router-dom";
 import { useAuthStore } from "../../features/auth/store/authStore.js";
+import { usePostStore } from "../../features/post/store/postStore.js";
 import { styles } from "../../styles/dashboard.js";
 import { WhatsAppBubble } from "../../features/whatsapp/components/WhatsAppBubble.jsx";
 import { ProfileModal } from "../../features/auth/components/ProfileModal.jsx";
@@ -87,6 +88,12 @@ export const DashboardPage = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const fetchPosts = usePostStore((state) => state.fetchPosts);
+  const hasUnreadUrgent = usePostStore((state) => state.hasUnreadUrgent());
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -200,9 +207,25 @@ export const DashboardPage = () => {
                       ...styles.navLabel,
                       color: isActive ? "#fff" : "rgba(255,255,255,0.7)",
                       fontWeight: isActive ? "600" : "400",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
                     }}
                   >
                     {item.label}
+                    {item.path === "/dashboard/posts" && hasUnreadUrgent && (
+                      <span
+                        title="Hay anuncios urgentes sin revisar"
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: "#ef4444",
+                          boxShadow: "0 0 0 2px rgba(239,68,68,0.25)",
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
                   </span>
                   {isActive && <span style={styles.activeBar} />}
                 </div>

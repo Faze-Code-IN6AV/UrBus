@@ -112,21 +112,115 @@ export const updatePassengerStatus = async (req, res, next) => {
     }
 
     if (
-      (req.user.role === 'PASSENGER_ROLE' || req.user.role === 'USER_ROLE') &&
-      passenger.userId !== req.user.id
+      req.user.role !== 'ADMIN_ROLE' &&
+      req.user.role !== 'DRIVER_ROLE'
     ) {
       return res.status(403).json({
         success: false,
-        message: 'Solo puede actualizar su propio estado'
+        message: 'Solo el conductor o un administrador pueden marcar la asistencia'
       });
     }
 
     passenger.status = status;
+
+    // Si vuelve a PRESENT, se limpia cualquier motivo de ausencia previo
+    if (status === 'PRESENT') {
+      passenger.absenceReason = null;
+      passenger.absenceReasonNote = null;
+      passenger.absenceReasonAt = null;
+    }
+
     await passenger.save();
 
     res.status(200).json({
       success: true,
       message: 'Estado actualizado',
+      data: passenger
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+const ABSENCE_REASONS = ['SALUD', 'EMERGENCIA', 'EXTRACURRICULAR', 'OTRO'];
+
+export const setAbsenceReason = async (req, res, next) => {
+  try {
+
+    if (req.user.role !== 'ADMIN_ROLE' && req.user.role !== 'DRIVER_ROLE') {
+      return res.status(403).json({
+        success: false,
+        message: 'No tiene permisos para registrar el motivo de ausencia'
+      });
+    }
+
+    const { id } = req.params;
+    const { reason, note } = req.body;
+
+    if (!ABSENCE_REASONS.includes(reason)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Motivo de ausencia inválido'
+      });
+    }
+
+    const passenger = await Passenger.findById(id);
+
+    if (!passenger) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pasajero no encontrado'
+      });
+    }
+
+    passenger.status = 'AUSENT';
+    passenger.absenceReason = reason;
+    passenger.absenceReasonNote = reason === 'OTRO' ? (note?.trim() || null) : null;
+    passenger.absenceReasonAt = new Date();
+
+    await passenger.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Motivo de ausencia registrado',
+      data: passenger
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const clearAbsenceReason = async (req, res, next) => {
+  try {
+
+    if (req.user.role !== 'ADMIN_ROLE' && req.user.role !== 'DRIVER_ROLE') {
+      return res.status(403).json({
+        success: false,
+        message: 'No tiene permisos para quitar el motivo de ausencia'
+      });
+    }
+
+    const { id } = req.params;
+    const passenger = await Passenger.findById(id);
+
+    if (!passenger) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pasajero no encontrado'
+      });
+    }
+
+    passenger.absenceReason = null;
+    passenger.absenceReasonNote = null;
+    passenger.absenceReasonAt = null;
+
+    await passenger.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Motivo de ausencia eliminado',
       data: passenger
     });
 

@@ -1,5 +1,18 @@
+import { useState } from 'react';
 import { useAuthStore }     from '../../auth/store/authStore.js';
 import { usePassengerStore } from '../store/passengerStore.js';
+import { AccountInfoModal } from '../../../shared/components/AccountInfoModal.jsx';
+import { AbsenceReasonModal } from './AbsenceReasonModal.jsx';
+import { getUserById } from '../../../shared/api/users.js';
+import { showError } from '../../../shared/utils/toast.js';
+import { isTodayGT } from '../../../shared/utils/date.js';
+
+const ABSENCE_REASON_LABELS = {
+    SALUD: 'Motivos de Salud',
+    EMERGENCIA: 'Emergencia',
+    EXTRACURRICULAR: 'Actividad Extracurricular',
+    OTRO: 'Otro Motivo',
+};
 
 const AVATAR_PALETTE = [
     { bg: '#f9d4c8', color: '#b85c3a' },
@@ -78,12 +91,38 @@ function IconBtn({ onClick, title, color, children }) {
 export const PassengerCard = ({ passenger, onEdit, onDelete }) => {
     const user    = useAuthStore((s) => s.user);
     const isAdmin = user?.role === 'ADMIN_ROLE';
-    const userId  = user?.id || user?._id;
-    const canToggleStatus = isAdmin || user?.role === 'DRIVER_ROLE' || String(passenger.userId) === String(userId);
+    const isDriver = user?.role === 'DRIVER_ROLE';
+    const canToggleStatus = isAdmin || isDriver;
+    const canViewInfo = isAdmin || isDriver;
 
     const toggleStatus = usePassengerStore((s) => s.toggleStatus);
-    const { _id, name, status, address } = passenger;
+    const clearPassengerAbsenceReason = usePassengerStore((s) => s.clearPassengerAbsenceReason);
+    const { _id, name, status, address, absenceReason, absenceReasonNote, absenceReasonAt } = passenger;
     const isPresent = status === 'PRESENT';
+
+    // El motivo de ausencia solo se muestra si fue registrado hoy (horario de Guatemala);
+    // a partir de las 0:00 GT deja de mostrarse automáticamente.
+    const showAbsenceReason = !isPresent && absenceReason && isTodayGT(absenceReasonAt);
+    const absenceReasonLabel = ABSENCE_REASON_LABELS[absenceReason] ?? absenceReason;
+
+    const [infoAccount, setInfoAccount] = useState(null);
+    const [infoLoading, setInfoLoading] = useState(false);
+    const [showInfo, setShowInfo] = useState(false);
+    const [showAbsenceModal, setShowAbsenceModal] = useState(false);
+
+    const handleViewInfo = async () => {
+        setShowInfo(true);
+        setInfoLoading(true);
+        try {
+            const { data } = await getUserById(passenger.userId);
+            setInfoAccount(data);
+        } catch (err) {
+            setInfoAccount(null);
+            showError(err.response?.data?.message || 'No se pudo cargar la información de la cuenta');
+        } finally {
+            setInfoLoading(false);
+        }
+    };
 
     return (
         <div style={{
@@ -107,14 +146,73 @@ export const PassengerCard = ({ passenger, onEdit, onDelete }) => {
                 }}>
                     {address ?? `ID: ${_id?.slice(-6)}`}
                 </p>
+                {showAbsenceReason && (
+                    <p style={{
+                        margin: '4px 0 0', fontSize: 11.5, fontWeight: 700, color: '#b45309',
+                        display: 'flex', alignItems: 'center', gap: 5,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                        <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" strokeLinecap="round" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" strokeLinecap="round" />
+                        </svg>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {absenceReasonLabel}
+                            {absenceReasonNote ? `: ${absenceReasonNote}` : ''}
+                        </span>
+                        {canToggleStatus && (
+                            <button
+                                onClick={() => clearPassengerAbsenceReason(_id)}
+                                title="Quitar motivo de ausencia"
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    width: 15, height: 15, borderRadius: '50%', border: 'none',
+                                    background: 'rgba(180,83,9,0.12)', color: '#b45309',
+                                    cursor: 'pointer', flexShrink: 0, padding: 0,
+                                }}
+                            >
+                                <svg width="9" height="9" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                    <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" />
+                                    <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" />
+                                </svg>
+                            </button>
+                        )}
+                    </p>
+                )}
             </div>
+
+            {canToggleStatus && (
+                <button
+                    onClick={() => setShowAbsenceModal(true)}
+                    title="Registrar motivo de ausencia"
+                    style={{
+                        padding: '7px 12px', borderRadius: 9,
+                        border: '1.5px solid #e5e7eb', background: '#fff',
+                        color: '#374151', fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
+                    }}
+                >
+                    ¿Motivo de ausencia?
+                </button>
+            )}
 
             <Checkbox
                 checked={isPresent}
                 onChange={canToggleStatus ? () => toggleStatus(_id) : undefined}
-                title={canToggleStatus ? (isPresent ? 'Marcar como ausente' : 'Marcar como presente') : 'Solo puedes marcar tu propia asistencia'}
+                title={canToggleStatus ? (isPresent ? 'Marcar como ausente' : 'Marcar como presente') : 'Solo el conductor o un administrador pueden marcar asistencia'}
                 disabled={!canToggleStatus}
             />
+
+            {canViewInfo && (
+                <IconBtn onClick={handleViewInfo} title="Ver información de contacto" color="#005691">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" strokeLinecap="round" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" strokeLinecap="round" />
+                    </svg>
+                </IconBtn>
+            )}
 
             {isAdmin && (
                 <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
@@ -133,6 +231,21 @@ export const PassengerCard = ({ passenger, onEdit, onDelete }) => {
                         </svg>
                     </IconBtn>
                 </div>
+            )}
+
+            {showInfo && (
+                <AccountInfoModal
+                    account={infoAccount}
+                    loading={infoLoading}
+                    onClose={() => setShowInfo(false)}
+                />
+            )}
+
+            {showAbsenceModal && (
+                <AbsenceReasonModal
+                    passenger={passenger}
+                    onClose={() => setShowAbsenceModal(false)}
+                />
             )}
         </div>
     );

@@ -9,11 +9,30 @@ import {
 } from '../../../shared/api/post.js';
 import { showSuccess, showError } from '../../../shared/utils/toast.js';
 
+const LAST_SEEN_KEY = 'urbus_posts_last_seen_urgent';
+
 export const usePostStore = create((set, get) => ({
     posts: [],
     myPosts: [],
     loading: false,
     error: null,
+    lastSeenUrgentAt: localStorage.getItem(LAST_SEEN_KEY),
+
+    // true si hay algún post urgente (activo) creado después de la última vez que se abrió Publicaciones
+    hasUnreadUrgent: () => {
+        const { posts, lastSeenUrgentAt } = get();
+        if (!Array.isArray(posts)) return false;
+        const urgentPosts = posts.filter((p) => p.isUrgent && !p.isDeleted);
+        if (urgentPosts.length === 0) return false;
+        if (!lastSeenUrgentAt) return true;
+        return urgentPosts.some((p) => new Date(p.createdAt) > new Date(lastSeenUrgentAt));
+    },
+
+    markPostsSeen: () => {
+        const now = new Date().toISOString();
+        localStorage.setItem(LAST_SEEN_KEY, now);
+        set({ lastSeenUrgentAt: now });
+    },
 
     fetchPosts: async () => {
         try {

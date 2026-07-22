@@ -5,6 +5,8 @@ import {
   getPassengers,
   getMyPassenger,
   updatePassengerStatus,
+  setAbsenceReason,
+  clearAbsenceReason,
   deletePassenger
 } from './passenger.controller.js';
 
@@ -34,6 +36,18 @@ router.patch(
   '/:id/status',
   validateJWT,
   updatePassengerStatus
+);
+
+router.put(
+  '/:id/absence-reason',
+  validateJWT,
+  setAbsenceReason
+);
+
+router.delete(
+  '/:id/absence-reason',
+  validateJWT,
+  clearAbsenceReason
 );
 
 router.delete(

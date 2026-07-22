@@ -21,6 +21,19 @@ public class UserManagementController(IUserManagementService userManagementServi
         return Ok(allUsers);
     }
 
+    /// <summary>Obtener información de contacto de una cuenta (nombre, teléfono, email, fecha de creación, etc.)</summary>
+    [Authorize(Roles = "ADMIN_ROLE,DRIVER_ROLE")]
+    [HttpGet("{userId}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetUserById(string userId)
+    {
+        var result = await userManagementService.GetUserByIdAsync(userId);
+        return Ok(result);
+    }
+
     /// <summary>Actualizar rol de usuario</summary>
     [Authorize(Roles = "ADMIN_ROLE")]
     [HttpPut("{userId}/role")]

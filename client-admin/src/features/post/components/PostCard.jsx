@@ -37,13 +37,14 @@ export const PostCard = ({ post, onEdit, onDelete, onRestore }) => {
     const canEdit    = isAdmin || (isDriver && isOwner);
     const canRestore = isAdmin;
 
-    const { title, content, imageUrl, isDeleted, createdAt } = post;
+    const { title, content, imageUrl, isDeleted, isUrgent, createdAt } = post;
 
     return (
         <div style={{
             display: 'flex', alignItems: 'flex-start', gap: 14,
             padding: '16px 18px',
-            background: '#fff',
+            background: isUrgent && !isDeleted ? '#fef2f2' : '#fff',
+            borderLeft: isUrgent && !isDeleted ? '4px solid #ef4444' : '4px solid transparent',
             opacity: isDeleted ? 0.55 : 1,
             transition: 'opacity 0.2s',
         }}>
@@ -79,6 +80,15 @@ export const PostCard = ({ post, onEdit, onDelete, onRestore }) => {
                     }}>
                         {title}
                     </p>
+                    {isUrgent && !isDeleted && (
+                        <span style={{
+                            fontSize: 10, fontWeight: 800, color: '#fff',
+                            background: '#ef4444', borderRadius: 4, padding: '1px 7px',
+                            letterSpacing: '0.3px',
+                        }}>
+                            URGENTE
+                        </span>
+                    )}
                     {isDeleted && (
                         <span style={{
                             fontSize: 10, fontWeight: 700, color: '#ef4444',
