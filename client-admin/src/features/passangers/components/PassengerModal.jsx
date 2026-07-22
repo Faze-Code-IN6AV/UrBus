@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { usePassengerStore } from '../store/passengerStore.js';
+import { useUserStore } from '../../users/store/userStore.js';
 
 const INPUT_STYLE = {
     width: '100%', padding: '10px 14px', borderRadius: 10,
@@ -14,11 +15,41 @@ export const PassengerModal = ({ passenger = null, onClose }) => {
     const addPassenger  = usePassengerStore((s) => s.addPassenger);
     const editPassenger = usePassengerStore((s) => s.editPassenger);
     const loading       = usePassengerStore((s) => s.loading);
+    const passengers    = usePassengerStore((s) => s.passengers);
+
+    const allUsers    = useUserStore((s) => s.users);
+    const fetchUsers   = useUserStore((s) => s.fetchUsers);
 
     const [name,   setName]   = useState(passenger?.name   ?? '');
     const [userId, setUserId] = useState(passenger?.userId ?? '');
     const [errors, setErrors] = useState({});
     const inputRef = useRef(null);
+
+    // Cuentas que aún no están vinculadas a ningún pasajero (y no son admin/conductor)
+    const eligibleUsers = useMemo(() => {
+        const linkedIds = new Set(passengers.map((p) => String(p.userId)));
+        return (allUsers || []).filter((u) =>
+            !linkedIds.has(String(u.id)) &&
+            u.role !== 'ADMIN_ROLE' &&
+            u.role !== 'DRIVER_ROLE'
+        );
+    }, [allUsers, passengers]);
+
+    useEffect(() => {
+        if (!isEdit && (!allUsers || allUsers.length === 0)) fetchUsers();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleSelectUser = (e) => {
+        const selectedId = e.target.value;
+        setUserId(selectedId);
+        setErrors((p) => ({ ...p, userId: '' }));
+
+        const selectedUser = eligibleUsers.find((u) => String(u.id) === selectedId);
+        if (selectedUser) {
+            const fullName = `${selectedUser.name ?? ''} ${selectedUser.surname ?? ''}`.trim();
+            if (fullName) setName(fullName);
+        }
+    };
 
     useEffect(() => { setTimeout(() => inputRef.current?.focus(), 50); }, []);
 
@@ -113,20 +144,27 @@ export const PassengerModal = ({ passenger = null, onClose }) => {
                     {!isEdit && (
                         <div>
                             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-                                ID de cuenta (userId)
+                                Cuenta de usuario (ID)
                             </label>
-                            <input
+                            <select
                                 value={userId}
-                                onChange={(e) => { setUserId(e.target.value); setErrors((p) => ({ ...p, userId: '' })); }}
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
-                                placeholder="ID del usuario en el sistema de auth"
-                                style={{ ...INPUT_STYLE, borderColor: errors.userId ? '#ef4444' : '#e5e7eb' }}
-                            />
+                                onChange={handleSelectUser}
+                                style={{ ...INPUT_STYLE, borderColor: errors.userId ? '#ef4444' : '#e5e7eb', cursor: 'pointer' }}
+                            >
+                                <option value="">
+                                    {eligibleUsers.length === 0 ? 'No hay cuentas disponibles para vincular' : 'Selecciona una cuenta...'}
+                                </option>
+                                {eligibleUsers.map((u) => (
+                                    <option key={u.id} value={u.id}>
+                                        {`${u.name ?? ''} ${u.surname ?? ''}`.trim() || u.username} — {u.username}
+                                    </option>
+                                ))}
+                            </select>
                             {errors.userId && (
                                 <p style={{ margin: '6px 0 0', fontSize: 12, color: '#ef4444' }}>{errors.userId}</p>
                             )}
                             <p style={{ margin: '6px 0 0', fontSize: 11.5, color: '#9ca3af' }}>
-                                Este ID vincula al pasajero con su cuenta de acceso al sistema.
+                                Solo se muestran cuentas que todavía no están vinculadas a un pasajero. Al elegir una, el nombre se completa automáticamente (puedes editarlo).
                             </p>
                         </div>
                     )}

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getPassengers, createPassenger, updatePassengerStatus, deletePassenger } from '../../../shared/api/passenger.js';
+import { getPassengers, createPassenger, updatePassengerStatus, setAbsenceReason, clearAbsenceReason, deletePassenger } from '../../../shared/api/passenger.js';
 import { showSuccess, showError } from '../../../shared/utils/toast.js';
 
 export const usePassengerStore = create((set, get) => ({
@@ -79,6 +79,36 @@ export const usePassengerStore = create((set, get) => ({
                 ),
             }));
             showError(err.response?.data?.message || 'Error al actualizar estado');
+        }
+    },
+
+    setPassengerAbsenceReason: async (id, payload) => {
+        try {
+            const { data } = await setAbsenceReason(id, payload);
+            set((state) => ({
+                passengers: state.passengers.map((p) => (p._id === id ? data.data : p)),
+            }));
+            showSuccess('Motivo de ausencia registrado');
+            return { success: true };
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Error al registrar el motivo de ausencia';
+            showError(msg);
+            return { success: false, error: msg };
+        }
+    },
+
+    clearPassengerAbsenceReason: async (id) => {
+        try {
+            const { data } = await clearAbsenceReason(id);
+            set((state) => ({
+                passengers: state.passengers.map((p) => (p._id === id ? data.data : p)),
+            }));
+            showSuccess('Motivo de ausencia eliminado');
+            return { success: true };
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Error al quitar el motivo de ausencia';
+            showError(msg);
+            return { success: false, error: msg };
         }
     },
 
