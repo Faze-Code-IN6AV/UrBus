@@ -18,6 +18,10 @@ const postSchema = new mongoose.Schema({
     imagePublicId: {
         type: String
     },
+    isUrgent: {
+        type: Boolean,
+        default: false
+    },
     createdBy: {
         type: String,
         required: true
@@ -31,7 +35,7 @@ const postSchema = new mongoose.Schema({
 });
 
 postSchema.methods.toJSON = function () {
-    const { __v, isDeleted, ...post } = this.toObject();
+    const { __v, ...post } = this.toObject();
     return post;
 };
 

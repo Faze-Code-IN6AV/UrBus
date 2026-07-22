@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePosts } from '../hooks/usePosts.js';
+import { usePostStore } from '../store/postStore.js';
 import { PostCard } from '../components/PostCard.jsx';
 import { PostModal } from '../components/PostModal.jsx';
 import { DeletePostModal } from '../components/DeletePostModal.jsx';
@@ -67,6 +68,9 @@ export const PostListPage = () => {
 
     const [modal, setModal] = useState(null);
     const [showDeleted, setShowDeleted] = useState(false);
+    const markPostsSeen = usePostStore((s) => s.markPostsSeen);
+
+    useEffect(() => { markPostsSeen(); }, [markPostsSeen]);
 
     const visiblePosts = isAdmin && showDeleted
         ? allPosts

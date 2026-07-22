@@ -20,11 +20,12 @@ export const createPost = async (req, res) => {
             });
         }
 
-        const { title, content } = req.body;
+        const { title, content, isUrgent } = req.body;
 
         const post = new Post({
             title,
             content,
+            isUrgent: isUrgent === true || isUrgent === 'true',
             createdBy: req.user.id
         });
 
@@ -146,6 +147,10 @@ export const updatePost = async (req, res) => {
             title: req.body.title ?? post.title,
             content: req.body.content ?? post.content
         };
+
+        if (req.body.isUrgent !== undefined) {
+            data.isUrgent = req.body.isUrgent === true || req.body.isUrgent === 'true';
+        }
 
         if (req.file) {
             data.imageUrl = req.file.path;
