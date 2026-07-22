@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useUserStore } from '../store/userStore.js';
+import { AccountInfoModal } from '../../../shared/components/AccountInfoModal.jsx';
 
 const AVATAR_PALETTE = [
     { bg: '#f9d4c8', color: '#b85c3a' },
@@ -64,6 +65,7 @@ export const UserCard = ({ user, currentUserId }) => {
     const verifyEmail = useUserStore((s) => s.verifyEmail);
     const [updating, setUpdating] = useState(false);
     const [verifying, setVerifying] = useState(false);
+    const [showInfo, setShowInfo] = useState(false);
 
     const { id, name, surname, email, role, status, isEmailVerified } = user;
     const isSelf = String(id) === String(currentUserId);
@@ -120,6 +122,28 @@ export const UserCard = ({ user, currentUserId }) => {
                 }}>
                     {email}
                 </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                    <p style={{
+                        margin: 0, fontSize: 11, color: '#9ca3af', fontFamily: 'monospace',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                        ID: {id}
+                    </p>
+                    <button
+                        onClick={() => { navigator.clipboard?.writeText(id); }}
+                        title="Copiar ID de la cuenta"
+                        style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: 18, height: 18, borderRadius: 5, border: 'none',
+                            background: 'transparent', color: '#9ca3af', cursor: 'pointer', flexShrink: 0,
+                        }}
+                    >
+                        <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <rect x="9" y="9" width="13" height="13" rx="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
@@ -131,6 +155,23 @@ export const UserCard = ({ user, currentUserId }) => {
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: '#f59e0b' }}>Email sin verificar</span>
                 )}
             </div>
+
+            <button
+                onClick={() => setShowInfo(true)}
+                title="Ver información de la cuenta"
+                style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 32, height: 32, borderRadius: 9,
+                    border: '1.5px solid #e5e7eb', background: '#fff',
+                    color: '#005691', cursor: 'pointer', flexShrink: 0,
+                }}
+            >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" strokeLinecap="round" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" strokeLinecap="round" />
+                </svg>
+            </button>
 
             {!isEmailVerified && (
                 <button
@@ -170,6 +211,10 @@ export const UserCard = ({ user, currentUserId }) => {
                     <option key={r} value={r}>{ROLE_LABELS[r]}</option>
                 ))}
             </select>
+
+            {showInfo && (
+                <AccountInfoModal account={user} onClose={() => setShowInfo(false)} />
+            )}
         </div>
     );
 };

@@ -10,4 +10,5 @@ public interface IUserManagementService
     Task<IReadOnlyList<UserResponseDto>> GetUsersByRoleAsync(string roleName);
     Task<UserResponseDto> UpdateProfileAsync(string userId, UpdateProfileDto dto);
     Task<UserResponseDto> VerifyUserEmailAsync(string userId);
+    Task<UserResponseDto> GetUserByIdAsync(string userId);
 }
